@@ -2,6 +2,8 @@
 
 ## Requirements
 
+Manually install the [GNU ARM embedded toolchain](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm), or use the following PPA:
+
 ```
 sudo add-apt-repository ppa:team-gcc-arm-embedded/ppa
 sudo apt-get update
