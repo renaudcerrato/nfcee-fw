@@ -1,5 +1,4 @@
 # CMakeFiles
-
 MakeCache.txt
 CMakeFiles
 CMakeScripts
@@ -11,4 +10,5 @@ compile_commands.json
 CTestTestfile.cmake
 
 # Project
+.idea
 build/
