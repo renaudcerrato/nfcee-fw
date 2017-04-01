@@ -20,3 +20,6 @@ cd build/
 cmake .. && make
 ```
 
+## Debugging
+
+https://github.com/gnuarmeclipse/openocd/releases
