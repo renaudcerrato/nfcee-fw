@@ -4,7 +4,7 @@ INCLUDE(Environment.cmake)
 PROJECT(nfcee)
 ENABLE_LANGUAGE(ASM)
 
-FIND_PACKAGE(ChibiOS 16 COMPONENTS rt hal adc can dac ext gpt i2c i2s icu mac mmc_spi pal pwm rtc sdc serial serial_usb spi st uart usb chprintf memstreams nullstreams evtimer shell syscalls REQUIRED)
+FIND_PACKAGE(ChibiOS 16 COMPONENTS rt hal ext gpt icu pal serial spi st usb chprintf memstreams nullstreams evtimer syscalls REQUIRED)
 FIND_PROGRAM(OPENOCD openocd)
 
 INCLUDE_DIRECTORIES(
