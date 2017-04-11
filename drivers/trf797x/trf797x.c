@@ -1,18 +1,20 @@
 #include "trf797x.h"
 
+#define EVENT_IRQ       (1 << 0)
+#define EVENT_STOP      (1 << 31)
 
 void trf797x_init(Trf797xDriver *driver) {
     driver->state = TRF797XA_ST_IDLE;
-    driver->thread = NULL;
+    osalEventObjectInit(&driver->event);
 }
 
 void tf797x_interrupt_hookI(Trf797xDriver *driver) {
     osalSysLockFromISR();
-    osalThreadResumeI(&driver->thread, MSG_OK);
+    osalEventBroadcastFlagsI(&driver->event, EVENT_IRQ);
     osalSysUnlockFromISR();
 }
 
 void trf797x_stop(Trf797xDriver *driver) {
     driver->state = TRF797XA_ST_STOP;
-    osalThreadResumeS(&driver->thread, MSG_RESET);
+    osalEventBroadcastFlags(&driver->event, EVENT_STOP);
 }

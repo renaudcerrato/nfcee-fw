@@ -30,7 +30,7 @@ typedef struct {
 } gpio_spec_t;
 
 #define _trf79x_driver_data                                                 \
-                thread_reference_t  thread;                                 \
+                event_source_t      event;                                  \
                 trf797x_state_t     state;
 
 #define _trf79x_config_data                                                 \
