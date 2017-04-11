@@ -11,8 +11,7 @@ typedef struct Trf797xInitiatorConfig {
 } Trf797xInitiatorConfig;
 
 typedef struct Trf797xInitiatorDriver {
-    _trf79x_driver_data
-    const Trf797xInitiatorConfig *config;
+    _trf79x_driver_data(Trf797xInitiatorConfig)
 } Trf797xInitiatorDriver;
 
 #define TRF797X_FLAG_TX_SDM                 BIT(0)  /**< use special direct mode for emission (raw mode) */
@@ -38,14 +37,14 @@ struct trf797x_transfer {
  * Initialize the driver structure.
  * @param driver
  */
-void trf797x_initiator_init(Trf797xInitiatorDriver *driver);
+void trf797x_initiator_driver_init(Trf797xInitiatorDriver *driver);
 
 /**
  * Start the driver.
  * @param driver
  * @param config
  */
-void trf797x_initiator_start(Trf797xInitiatorDriver *driver, const Trf797xInitiatorConfig *config);
+int trf797x_initiator_start(Trf797xInitiatorDriver *driver, const Trf797xInitiatorConfig *config);
 
 
 /**

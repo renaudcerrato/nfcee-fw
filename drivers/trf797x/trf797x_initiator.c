@@ -1,13 +1,15 @@
 #include "trf797x.h"
 
-void trf797x_initiator_init(Trf797xInitiatorDriver *driver) {
-    trf797x_init((Trf797xDriver *) driver);
+void trf797x_initiator_driver_init(Trf797xInitiatorDriver *driver) {
+    trf797x_driver_init((Trf797xDriver *) driver);
     //TODO
 }
 
-void trf797x_initiator_start(Trf797xInitiatorDriver *driver, const Trf797xInitiatorConfig *config) {
-    trf797x_start((Trf797xDriver *) driver, (const Trf797xConfig *) config);
+int trf797x_initiator_start(Trf797xInitiatorDriver *driver, const Trf797xInitiatorConfig *config) {
+    int result = trf797x_start((Trf797xDriver *) driver, (const Trf797xConfig *) config);
+    if(result < 0) return result;
     //TODO
+    return result;
 }
 
 int trf797x_initiator_transceive(Trf797xInitiatorDriver *driver, struct trf797x_transfer *tr) {
