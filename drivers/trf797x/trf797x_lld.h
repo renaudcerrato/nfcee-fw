@@ -53,10 +53,16 @@ typedef struct PACKED_VAR {
     uint8_t value;
 } trf797x_reg_map_t;
 
+void trf797x_acquire_bus(SPIDriver *spi);
+
 void trf797x_command(SPIDriver *spi, trf797x_cmd_t cmd);
+void trf797x_command_transmit(SPIDriver *spi, const void *data, size_t bits, bool crc);
+
 size_t trf797x_register_read(SPIDriver *spi, trf797x_reg_t adr, void *data, size_t len);
 void trf797x_register_write(SPIDriver *spi, trf797x_reg_t adr, const void *data, size_t len);
 void trf797x_register_write_map(SPIDriver *spi, trf797x_reg_map_t *map, size_t len);
+
+void trf797x_release_bus(SPIDriver *spi);
 
 static inline uint8_t trf797x_register_read1(SPIDriver *spi, trf797x_reg_t reg) {
     uint8_t val;
