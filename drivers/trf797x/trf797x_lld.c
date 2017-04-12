@@ -1,4 +1,5 @@
 #include "trf797x.h"
+#include "trf797x_lld.h"
 
 #define BIT(n)                          (1 << (n))
 #define CMD_BIT_CTRL                    BIT(7)

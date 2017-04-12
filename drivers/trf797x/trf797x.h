@@ -14,6 +14,7 @@ typedef enum {
     TRF797XA_ST_IDLE,
     //TODO
     TRF797XA_ST_STOP,
+    TRF797XA_ST_SHUTDOWN,
 } trf797x_state_t;
 
 
@@ -47,7 +48,6 @@ typedef struct Trf797xDriver {
 } Trf797xDriver;
 
 
-#include "trf797x_lld.h"
 #include "trf797x_initiator.h"
 
 /**

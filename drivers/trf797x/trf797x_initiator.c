@@ -1,4 +1,5 @@
 #include "trf797x.h"
+#include "trf797x_lld.h"
 
 void trf797x_initiator_driver_init(Trf797xInitiatorDriver *driver) {
     trf797x_driver_init((Trf797xDriver *) driver);
