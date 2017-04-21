@@ -11,6 +11,7 @@ typedef enum {
 } trf797x_protocol_t;
 
 typedef enum {
+    TRF797XA_ST_UNKNOWN,
     TRF797XA_ST_IDLE,
     //TODO
     TRF797XA_ST_STOP,
@@ -29,7 +30,14 @@ typedef enum {
 typedef struct {
     ioportid_t      port;
     ioportmask_t    pin;
-} gpio_spec_t;
+} trf_gpio_spec_t;
+
+enum trf797x_sys_clk_divider {
+    TRF7970X_SYS_CLK_DISABLED,
+    TRF7970X_SYS_CLK_DIV1,
+    TRF7970X_SYS_CLK_DIV2,
+    TRF7970X_SYS_CLK_DIV4,
+};
 
 #define _trf79x_driver_data(CONFIG)                                         \
                 event_source_t      event;                                  \
@@ -37,7 +45,14 @@ typedef struct {
                 const CONFIG        *config;
 
 #define _trf79x_config_data                                                 \
-                SPIDriver *spi;
+                SPIDriver                       *spi;                       \
+                bool                            osc27m;                     \
+                enum trf797x_sys_clk_divider    div;                        \
+                struct {                                                    \
+                    trf_gpio_spec_t     en;                                 \
+                    trf_gpio_spec_t     mod;                                \
+                    trf_gpio_spec_t     io[8];                              \
+                } gpio;
 
 typedef struct Trf797xConfig {
     _trf79x_config_data
@@ -58,11 +73,11 @@ void trf797x_driver_init(Trf797xDriver *driver);
 
 /**
  * Configure and start the driver.
- * @param driver
+ * @param drv
  * @param config
  * @return zero on success, < 0 otherwise.
  */
-int trf797x_start(Trf797xDriver *driver, const Trf797xConfig *config);
+int trf797x_start(Trf797xDriver *drv, const Trf797xConfig *config);
 
 /**
  * Interrupt hook.
@@ -74,7 +89,7 @@ void tf797x_interrupt_hookI(Trf797xDriver *driver);
  * Stop the driver.
  * @param driver
  */
-void trf797x_stop(Trf797xDriver *driver);
+void trf797x_stop(Trf797xDriver *driver, bool shutdown);
 
 
 #endif //TRF797X_H

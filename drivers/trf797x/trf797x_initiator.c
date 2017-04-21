@@ -18,7 +18,7 @@ int trf797x_initiator_transceive(Trf797xInitiatorDriver *driver, struct trf797x_
     return 0;
 }
 
-void trf797x_initiator_stop(Trf797xInitiatorDriver *driver) {
+void trf797x_initiator_stop(Trf797xInitiatorDriver *driver, bool shutdown) {
     //TODO
-    trf797x_stop((Trf797xDriver *) driver);
+    trf797x_stop((Trf797xDriver *) driver, shutdown);
 }

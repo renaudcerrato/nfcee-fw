@@ -1,88 +1,72 @@
 #include "trf797x.h"
 #include "trf797x_lld.h"
-#include "trf797x_conf.h"
 
 #define EVENT_IRQ               (1 << 0)
 #define EVENT_STOP              (1 << 31)
 
+#define gpio_set(spec) do{ palSetPad(spec.port, spec.pin); }while(0)
+#define gpio_clr(spec) do{ palClearPad(spec.port, spec.pin); }while(0)
+
 /**
  * Power-up sequence.
  */
-static void gpio_power_up(void) {
-    CLEAR(EN);
+static void reset_hardware(const Trf797xConfig *cfg) {
+    gpio_clr(cfg->gpio.en);
+    gpio_clr(cfg->gpio.io[0]); // SPI with SS
+    gpio_set(cfg->gpio.io[1]); // SPI with SS
+    gpio_set(cfg->gpio.io[2]); // SPI with SS
 
-#if TRF797X_USE_EN2
-    CLEAR(EN2);
-#endif
-
-#if TRF797X_USE_IO0
-    CLEAR(IO0);     // SPI with SS
-#endif
-
-#if TRF797X_USE_IO1
-    SET(IO1);       // SPI with SS
-#endif
-
-#if TRF797X_USE_IO2
-    SET(IO2);       // SPI with SS
-#endif
-
-    CLEAR(CS);
+    spiUnselect(cfg->spi);
     chThdSleepMilliseconds(2);
-    SET(CS);
+    spiSelect(cfg->spi);        // is it really necessary?
     chThdSleepMilliseconds(3);
-    SET(EN);
-    chThdSleepMilliseconds(5); // how much?
+    gpio_set(cfg->gpio.en);
+    chThdSleepMilliseconds(5);          // how much?
+    spiUnselect(cfg->spi);
+}
+
+static bool trf797x_configure(const Trf797xConfig *cfg) {
+
+    uint8_t mod_sys_clk = TRF7970X_MODULATOR_DEPTH_OOK | TRF7970X_MODULATOR_CLK(cfg->div);
+
+    trf797x_acquire_bus(cfg->spi);
+    trf797x_command(cfg->spi, TRF797X_CMD_INIT);
+    trf797x_command(cfg->spi, TRF797X_CMD_IDLE);
+    chThdSleepMilliseconds(1);
+
+    trf797x_command(cfg->spi, TRF797X_CMD_RESET_FIFO);
+
+    if(cfg->osc27m) {
+        mod_sys_clk |= TRF7970X_MODULATOR_27MHZ;
+    }
+
+    trf797x_register_write1(cfg->spi, TRF797X_REG_MODULATOR_SYS_CLK, mod_sys_clk);
+    trf797x_register_write1(cfg->spi, TRF797X_REG_NFC_TARGET_DETECTION, 0);  // see errata
+
+    const bool found = trf797x_register_read1(cfg->spi, TRF797X_REG_MODULATOR_SYS_CLK) == mod_sys_clk;
+
+    trf797x_release_bus(cfg->spi);
+
+    return found;
 }
 
 void trf797x_driver_init(Trf797xDriver *driver) {
-    driver->state = TRF797XA_ST_IDLE;
+    driver->state = TRF797XA_ST_UNKNOWN;
+    driver->config = NULL;
     osalEventObjectInit(&driver->event);
 }
 
-void trf797x_shutdown(Trf797xDriver *driver) {
-    CLEAR(EN);
-#if TRF797X_USE_EN2
-    CLEAR(EN2);
-#endif
-    driver->state = TRF797XA_ST_SHUTDOWN;
-}
+int trf797x_start(Trf797xDriver *drv, const Trf797xConfig *config) {
 
-bool trf797x_power_up(Trf797xDriver *drv) {
+    if(drv->state == TRF797XA_ST_SHUTDOWN || drv->state == TRF797XA_ST_UNKNOWN) {
+        reset_hardware(config);
+    }
 
-    gpio_power_up();
+    const bool found = trf797x_configure(config);
+    if(!found) return TRF797X_ERROR_PROBE;
 
-    trf797x_acquire_bus(drv->config->spi);
-    trf797x_command(drv->config->spi, TRF797X_CMD_INIT);
-    trf797x_command(drv->config->spi, TRF797X_CMD_IDLE);
-    chThdSleepMilliseconds(1);
-
-    trf797x_command(drv->config->spi, TRF797X_CMD_RESET_FIFO);
-
-    uint8_t mod_sys_clk = TRF7970X_MODULATOR_DEPTH_OOK;
-
-#if TRF797X_CFG_OSCILLATOR_27MHZ
-    mod_sys_clk|=TRF7970X_MODULATOR_27MHZ;
-#endif
-
-#if TRF797X_CFG_SYS_CLK_DIVIDER == 1
-    mod_sys_clk|=TRF7970X_SYS_CLK_DIV1;
-#elif TRF797X_CFG_SYS_CLK_DIVIDER == 2
-    mod_sys_clk|=TRF7970X_SYS_CLK_DIV2;
-#elif TRF797X_CFG_SYS_CLK_DIVIDER == 4
-    mod_sys_clk|=TRF7970X_SYS_CLK_DIV4;
-#elif TRF797X_CFG_SYS_CLK_DIVIDER == 0
-    mod_sys_clk|=TRF7970X_SYS_CLK_DISABLED;
-#endif
-
-    trf797x_register_write1(drv->config->spi, TRF797X_REG_MODULATOR_SYS_CLK, mod_sys_clk);
-    trf797x_register_write1(drv->config->spi, TRF797X_REG_NFC_TARGET_DETECTION, 0);  // see errata
-
-    const bool found = trf797x_register_read1(drv->config->spi, TRF797X_REG_MODULATOR_SYS_CLK) == mod_sys_clk;
-
-    trf797x_release_bus(drv->config->spi);
-
-    return found;
+    drv->config = config;
+    return 0;
 }
 
 void tf797x_interrupt_hookI(Trf797xDriver *driver) {
@@ -91,7 +75,13 @@ void tf797x_interrupt_hookI(Trf797xDriver *driver) {
     osalSysUnlockFromISR();
 }
 
-void trf797x_stop(Trf797xDriver *driver) {
-    driver->state = TRF797XA_ST_STOP;
-    osalEventBroadcastFlags(&driver->event, EVENT_STOP);
+void trf797x_stop(Trf797xDriver *drv, bool shutdown) {
+
+    if(shutdown) {
+        gpio_clr(drv->config->gpio.en);
+        drv->state = TRF797XA_ST_SHUTDOWN;
+    }else
+        drv->state = TRF797XA_ST_STOP;
+
+    osalEventBroadcastFlags(&drv->event, EVENT_STOP);
 }

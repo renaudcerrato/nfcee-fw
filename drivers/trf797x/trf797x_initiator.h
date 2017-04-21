@@ -17,7 +17,7 @@ typedef struct Trf797xInitiatorDriver {
 #define TRF797X_FLAG_TX_SDM                 BIT(0)  /**< use special direct mode for emission (raw mode) */
 
 #define TRF797X_FLAG_RX_DM1                 BIT(0)  /**< use direct mode 1 for reception (raw mode) */
-#define TRF797X_FLAG_RX_LSB_FIRST           BIT(1)  /**< if direct mode 1 is enabled, for reception */
+#define TRF797X_FLAG_RX_LSB_FIRST           BIT(1)  /**< valid only if TRF797X_FLAG_RX_DM1 is set */
 #define TRF797X_FLAG_RX_IGNORE_CRC_ERROR    BIT(2)  /**< disable CRC verification */
 #define TRF797X_FLAG_RX_IGNORE_PARITY_ERROR BIT(3)  /**< disable parity checks (ISO14443A) */
 
@@ -59,6 +59,6 @@ int trf797x_initiator_transceive(Trf797xInitiatorDriver *driver, struct trf797x_
  * Stop the driver.
  * @param driver
  */
-void trf797x_initiator_stop(Trf797xInitiatorDriver *driver);
+void trf797x_initiator_stop(Trf797xInitiatorDriver *driver, bool shutdown);
 
 #endif //TRF797X_INITIATOR_H

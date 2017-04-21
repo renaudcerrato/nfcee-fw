@@ -57,10 +57,6 @@
 #define TRF7970X_MODULATOR_DEPTH_ASK30          (TRF7970X_MODULATOR_DEPTH(7))
 #define TRF7970X_MODULATOR_EN_ANA               BIT(3)
 #define TRF7970X_MODULATOR_CLK(n)               (((n) & 0x3) << 4)
-#define TRF7970X_SYS_CLK_DISABLED               (TRF7970X_MODULATOR_CLK(0))
-#define TRF7970X_SYS_CLK_DIV4                   (TRF7970X_MODULATOR_CLK(1))
-#define TRF7970X_SYS_CLK_DIV2                   (TRF7970X_MODULATOR_CLK(2))
-#define TRF7970X_SYS_CLK_DIV1                   (TRF7970X_MODULATOR_CLK(3))
 #define TRF7970X_MODULATOR_EN_OOK               BIT(6)
 #define TRF7970X_MODULATOR_27MHZ                BIT(7)
 
