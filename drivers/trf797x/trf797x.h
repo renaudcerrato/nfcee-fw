@@ -3,29 +3,26 @@
 
 #include <hal.h>
 
-typedef enum {
-    TRF797X_PROTO_ISO14443A,
-    TRF797X_PROTO_ISO14443B,
-    TRF797X_PROTO_ISO15693,
-    TRF797X_PROTO_FELICA,
-} trf797x_protocol_t;
+#define EVENT_STOP              (1 << 0)
+#define EVENT_IRQ               (1 << 1)
 
-typedef enum {
-    TRF797XA_ST_UNKNOWN,
-    TRF797XA_ST_IDLE,
-    //TODO
-    TRF797XA_ST_STOP,
-    TRF797XA_ST_SHUTDOWN,
-} trf797x_state_t;
-
+enum trf797x_state {
+    TRF797X_ST_PWR_OFF,
+    TRF797X_ST_RF_OFF,
+    TRF797X_ST_IDLE,
+    TRF797X_ST_WAIT_FOR_TX,
+    TRF797X_ST_WAIT_FOR_RX,
+    TRF797X_ST_STOP,
+};
 
 /** Error codes */
-#define TRF797X_ERROR_CHECKSUM              -1
-#define TRF797X_ERROR_PARITY                -2
-#define TRF797X_ERROR_BYTE_FRAMING          -3
-#define TRF797X_ERROR_COLLISION             -4
-#define TRF797X_ERROR_TIMEOUT               -62
-#define TRF797X_ERROR_PROBE                 -1000
+#define TRF797X_ERR_TIMEOUT               -62
+#define TRF797X_ERR_PROBE                 -100
+#define TRF797X_ERR_CHECKSUM              -1001
+#define TRF797X_ERR_PARITY                -1002
+#define TRF797X_ERR_FRAMING               -1003
+#define TRF797X_ERR_COLLISION             -1004
+
 
 typedef struct {
     ioportid_t      port;
@@ -33,21 +30,29 @@ typedef struct {
 } trf_gpio_spec_t;
 
 enum trf797x_sys_clk_divider {
-    TRF7970X_SYS_CLK_DISABLED,
+    TRF7970X_SYS_CLK_DISABLED = 0,
     TRF7970X_SYS_CLK_DIV1,
     TRF7970X_SYS_CLK_DIV2,
     TRF7970X_SYS_CLK_DIV4,
 };
 
+enum trf797x_vin_voltage {
+    TRF7970X_VIN_5V,
+    TRF7970X_VIN_3V,
+};
+
 #define _trf79x_driver_data(CONFIG)                                         \
                 event_source_t      event;                                  \
-                trf797x_state_t     state;                                  \
+                event_listener_t    listener;                               \
+                enum trf797x_state  state;                                  \
                 const CONFIG        *config;
 
 #define _trf79x_config_data                                                 \
                 SPIDriver                       *spi;                       \
+                int                             event;                      \
                 bool                            osc27m;                     \
                 enum trf797x_sys_clk_divider    div;                        \
+                enum trf797x_vin_voltage        vin;                        \
                 struct {                                                    \
                     trf_gpio_spec_t     en;                                 \
                     trf_gpio_spec_t     mod;                                \

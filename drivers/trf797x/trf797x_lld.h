@@ -60,13 +60,54 @@
 #define TRF7970X_MODULATOR_EN_OOK               BIT(6)
 #define TRF7970X_MODULATOR_27MHZ                BIT(7)
 
+
+/* IRQ Status Register Bits */
+#define TRF7970X_IRQ_STATUS_NORESP              BIT(0) /* ISO15693 only */
+#define TRF7970X_IRQ_STATUS_NFC_COL_ERROR       BIT(0)
+#define TRF7970X_IRQ_STATUS_COL                 BIT(1)
+#define TRF7970X_IRQ_STATUS_FRAMING_EOF_ERROR   BIT(2)
+#define TRF7970X_IRQ_STATUS_NFC_RF              BIT(2)
+#define TRF7970X_IRQ_STATUS_PARITY_ERROR        BIT(3)
+#define TRF7970X_IRQ_STATUS_NFC_SDD             BIT(3)
+#define TRF7970X_IRQ_STATUS_CRC_ERROR           BIT(4)
+#define TRF7970X_IRQ_STATUS_NFC_PROTO_ERROR     BIT(4)
+#define TRF7970X_IRQ_STATUS_FIFO                BIT(5)
+#define TRF7970X_IRQ_STATUS_SRX                 BIT(6)
+#define TRF7970X_IRQ_STATUS_TX                  BIT(7)
+
+#define TRF7970X_IRQ_STATUS_ERROR                                   \
+                 (TRF7970X_IRQ_STATUS_COL |                         \
+                  TRF7970X_IRQ_STATUS_FRAMING_EOF_ERROR |           \
+                  TRF7970X_IRQ_STATUS_PARITY_ERROR |                \
+                  TRF7970X_IRQ_STATUS_CRC_ERROR)
+
+/* Chip Status Control Register Bits */
+#define TRF7970A_CHIP_STATUS_VRS5_3             BIT(0)
+#define TRF7970A_CHIP_STATUS_REC_ON             BIT(1)
+#define TRF7970A_CHIP_STATUS_AGC_ON             BIT(2)
+#define TRF7970A_CHIP_STATUS_PM_ON              BIT(3)
+#define TRF7970A_CHIP_STATUS_RF_PWR             BIT(4)
+#define TRF7970A_CHIP_STATUS_RF_ON              BIT(5)
+#define TRF7970A_CHIP_STATUS_DIRECT             BIT(6)
+#define TRF7970A_CHIP_STATUS_STBY               BIT(7)
+
+/* ISO Control Register Bits */
+#define TRF7970X_ISO_CTRL_NFC_NFCA_106          0x01
+#define TRF7970X_ISO_CTRL_NFC_NFCF_212          0x02
+#define TRF7970X_ISO_CTRL_NFC_NFCF_424          0x03
+#define TRF7970X_ISO_CTRL_NFC_CE_14443A         0x00
+#define TRF7970X_ISO_CTRL_NFC_CE_14443B         0x01
+#define TRF7970X_ISO_CTRL_NFC_CE                BIT(2)
+#define TRF7970X_ISO_CTRL_NFC_ACTIVE            BIT(3)
+#define TRF7970X_ISO_CTRL_NFC_INITIATOR         BIT(4)
+#define TRF7970X_ISO_CTRL_NFC_NFC_CE_MODE       BIT(5)
+#define TRF7970X_ISO_CTRL_RFID                  BIT(5)
+#define TRF7970X_ISO_CTRL_DIR_MODE              BIT(6)
+#define TRF7970X_ISO_CTRL_RX_CRC_N              BIT(7)  /* true == No CRC */
+
 typedef uint8_t trf797x_reg_t;
 typedef uint8_t trf797x_cmd_t;
 
-typedef struct PACKED_VAR {
-    trf797x_reg_t adr;
-    uint8_t value;
-} trf797x_reg_map_t;
 
 void trf797x_acquire_bus(SPIDriver *spi);
 
@@ -75,7 +116,6 @@ void trf797x_command_transmit(SPIDriver *spi, const void *data, size_t bits, boo
 
 size_t trf797x_register_read(SPIDriver *spi, trf797x_reg_t adr, void *data, size_t len);
 void trf797x_register_write(SPIDriver *spi, trf797x_reg_t adr, const void *data, size_t len);
-void trf797x_register_write_map(SPIDriver *spi, trf797x_reg_map_t *map, size_t len);
 
 void trf797x_release_bus(SPIDriver *spi);
 

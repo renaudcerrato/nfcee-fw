@@ -1,11 +1,10 @@
 #include "trf797x.h"
 #include "trf797x_lld.h"
 
-#define EVENT_IRQ               (1 << 0)
-#define EVENT_STOP              (1 << 31)
 
 #define gpio_set(spec) do{ palSetPad(spec.port, spec.pin); }while(0)
 #define gpio_clr(spec) do{ palClearPad(spec.port, spec.pin); }while(0)
+
 
 /**
  * Power-up sequence.
@@ -21,15 +20,14 @@ static void reset_hardware(const Trf797xConfig *cfg) {
     spiSelect(cfg->spi);        // is it really necessary?
     chThdSleepMilliseconds(3);
     gpio_set(cfg->gpio.en);
-    chThdSleepMilliseconds(5);          // how much?
+    chThdSleepMilliseconds(5);  // how much?
     spiUnselect(cfg->spi);
 }
 
-static bool trf797x_configure(const Trf797xConfig *cfg) {
+static bool trf797x_initialize(const Trf797xConfig *cfg) {
 
     uint8_t mod_sys_clk = TRF7970X_MODULATOR_DEPTH_OOK | TRF7970X_MODULATOR_CLK(cfg->div);
 
-    trf797x_acquire_bus(cfg->spi);
     trf797x_command(cfg->spi, TRF797X_CMD_INIT);
     trf797x_command(cfg->spi, TRF797X_CMD_IDLE);
     chThdSleepMilliseconds(1);
@@ -45,43 +43,44 @@ static bool trf797x_configure(const Trf797xConfig *cfg) {
 
     const bool found = trf797x_register_read1(cfg->spi, TRF797X_REG_MODULATOR_SYS_CLK) == mod_sys_clk;
 
-    trf797x_release_bus(cfg->spi);
-
     return found;
 }
 
 void trf797x_driver_init(Trf797xDriver *driver) {
-    driver->state = TRF797XA_ST_UNKNOWN;
+    driver->state = TRF797X_ST_PWR_OFF;
     driver->config = NULL;
-    osalEventObjectInit(&driver->event);
+    chEvtObjectInit(&driver->event);
 }
 
 int trf797x_start(Trf797xDriver *drv, const Trf797xConfig *config) {
 
-    if(drv->state == TRF797XA_ST_SHUTDOWN || drv->state == TRF797XA_ST_UNKNOWN) {
+    if(drv->state == TRF797X_ST_PWR_OFF) {
         reset_hardware(config);
     }
 
-    const bool found = trf797x_configure(config);
-    if(!found) return TRF797X_ERROR_PROBE;
+    const bool found = trf797x_initialize(config);
+    if(!found) {
+        return TRF797X_ERR_PROBE;
+    }
 
     drv->config = config;
+    chEvtRegisterMask(&drv->event, &drv->listener, EVENT_MASK(config->event));
+
     return 0;
 }
 
-void tf797x_interrupt_hookI(Trf797xDriver *driver) {
-    osalSysLockFromISR();
-    osalEventBroadcastFlagsI(&driver->event, EVENT_IRQ);
-    osalSysUnlockFromISR();
+void tf797x_interrupt_hookI(Trf797xDriver *drv) {
+    chSysLockFromISR();
+    chEvtBroadcastFlagsI(&drv->event, EVENT_IRQ);
+    chSysUnlockFromISR();
 }
 
 void trf797x_stop(Trf797xDriver *drv, bool shutdown) {
 
     if(shutdown) {
         gpio_clr(drv->config->gpio.en);
-        drv->state = TRF797XA_ST_SHUTDOWN;
-    }else
-        drv->state = TRF797XA_ST_STOP;
+        drv->state = TRF797X_ST_PWR_OFF;
+    }
 
-    osalEventBroadcastFlags(&drv->event, EVENT_STOP);
+    chEvtBroadcastFlags(&drv->event, EVENT_STOP);
 }
