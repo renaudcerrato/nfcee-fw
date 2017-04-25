@@ -41,9 +41,7 @@ static bool trf797x_initialize(const Trf797xConfig *cfg) {
     trf797x_register_write1(cfg->spi, TRF797X_REG_MODULATOR_SYS_CLK, mod_sys_clk);
     trf797x_register_write1(cfg->spi, TRF797X_REG_NFC_TARGET_DETECTION, 0);  // see errata
 
-    const bool found = trf797x_register_read1(cfg->spi, TRF797X_REG_MODULATOR_SYS_CLK) == mod_sys_clk;
-
-    return found;
+    return trf797x_register_read1(cfg->spi, TRF797X_REG_MODULATOR_SYS_CLK) == mod_sys_clk;
 }
 
 void trf797x_driver_init(Trf797xDriver *driver) {
@@ -63,6 +61,7 @@ int trf797x_start(Trf797xDriver *drv, const Trf797xConfig *config) {
         return TRF797X_ERR_PROBE;
     }
 
+    drv->state = TRF797X_ST_IDLE;
     drv->config = config;
     chEvtRegisterMask(&drv->event, &drv->listener, EVENT_MASK(config->event));
 

@@ -13,7 +13,6 @@ enum trf797x_state {
 };
 
 /** Error codes */
-#define TRF797X_ERR_IO              -1
 #define TRF797X_ERR_TIMEOUT         -62
 #define TRF797X_ERR_PROBE           -100
 #define TRF797X_ERR_CANCELLED       -200
