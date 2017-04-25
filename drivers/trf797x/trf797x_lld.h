@@ -1,6 +1,8 @@
 #ifndef TRF797X_LLD_H
 #define TRF797X_LLD_H
 
+#define TRF797X_FIFO_SIZE                  127
+
 /** TRF797x Registers */
 #define TRF797X_REG_CHIP_STATUS             0x00
 #define TRF797X_REG_ISO_CTRL                0x01
@@ -105,6 +107,8 @@
 #define TRF7970X_ISO_CTRL_DIR_MODE              BIT(6)
 #define TRF7970X_ISO_CTRL_RX_CRC_N              BIT(7)  /* true == No CRC */
 
+#define TRF797X_FIFO_STATUS_OVERFLOW            BIT(7)
+
 typedef uint8_t trf797x_reg_t;
 typedef uint8_t trf797x_cmd_t;
 
@@ -112,7 +116,7 @@ typedef uint8_t trf797x_cmd_t;
 void trf797x_acquire_bus(SPIDriver *spi);
 
 void trf797x_command(SPIDriver *spi, trf797x_cmd_t cmd);
-void trf797x_command_transmit(SPIDriver *spi, const void *data, size_t bits, bool crc);
+void trf797x_command_transmit(SPIDriver *spi, size_t bits, bool crc);
 
 size_t trf797x_register_read(SPIDriver *spi, trf797x_reg_t adr, void *data, size_t len);
 void trf797x_register_write(SPIDriver *spi, trf797x_reg_t adr, const void *data, size_t len);

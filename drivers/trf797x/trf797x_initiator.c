@@ -7,10 +7,24 @@
                             (cfg->vin == TRF7970X_VIN_5V ? TRF7970A_CHIP_STATUS_VRS5_3 : 0));   \
                         }while(0)
 
-#define rf_on(cfg)      _rf(cfg, TRUE)
-#define rf_off(cfg)     _rf(cfg, FALSE)
+#define rf_on(cfg)              _rf(cfg, TRUE)
+#define rf_off(cfg)             _rf(cfg, FALSE)
 
-#define read_irq(cfg)   trf797x_register_read1(cfg->spi, TRF797X_REG_IRQ_STATUS)
+#define read_irq(cfg)           trf797x_register_read1(cfg->spi, TRF797X_REG_IRQ_STATUS)
+#define read_fifo_bytes(drv)    (trf797x_register_read1(drv->config->spi, TRF797X_REG_FIFO_STATUS)  \
+                                & ~TRF797X_FIFO_STATUS_OVERFLOW)
+
+#define __CLEANUP__(m)              __attribute__ ((__cleanup__(m)))
+#define ACQUIRE_BUS_FOR_SCOPE(drv)  SPIDriver *__spi __CLEANUP__(do_release) = drv->config->spi;    \
+                                    trf797x_acquire_bus(__spi);
+
+#ifndef MIN
+#define MIN(a,b)                ((a) < (b) ? (a) : (b))
+#endif
+
+static void do_release(SPIDriver **spi) {
+    trf797x_release_bus(*spi);
+}
 
 static int irq2error(uint8_t irq) {
     if(irq & TRF7970X_IRQ_STATUS_COL) return TRF797X_ERR_COLLISION;
@@ -26,13 +40,16 @@ void trf797x_initiator_driver_init(Trf797xInitiatorDriver *driver) {
 
 int trf797x_initiator_start(Trf797xInitiatorDriver *drv, const Trf797xInitiatorConfig *config) {
 
-    trf797x_acquire_bus(config->spi);
+    ACQUIRE_BUS_FOR_SCOPE(drv);
 
     const int result = trf797x_start((Trf797xDriver *) drv, (const Trf797xConfig *) config);
-    if(result < 0) goto err;
+    if(result < 0) return result;
 
-    // Mask anything but errors
-    trf797x_register_write1(config->spi, TRF797X_REG_IRQ_MASK, TRF7970X_IRQ_STATUS_ERROR);
+    drv->state = TRF797X_ST_IDLE;
+
+    // Mask anything but errors and FIFO
+    trf797x_register_write1(config->spi, TRF797X_REG_IRQ_MASK,
+                            TRF7970X_IRQ_STATUS_ERROR | TRF7970X_IRQ_STATUS_FIFO);
 
     // Keep CRC into the RX buffer
     trf797x_register_write1(config->spi, TRF797X_REG_ISO_CTRL, config->proto |
@@ -41,12 +58,12 @@ int trf797x_initiator_start(Trf797xInitiatorDriver *drv, const Trf797xInitiatorC
 
     rf_on(config); // TODO: some delay is required for the target to power-up
 
-err:
-    trf797x_release_bus(config->spi);
-    return result;
+    return 0;
 }
 
 int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, struct trf797x_transfer *tr) {
+
+    ACQUIRE_BUS_FOR_SCOPE(drv);
 
     eventflags_t flags;
     uint8_t irq;
@@ -54,32 +71,98 @@ int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, struct trf797x_tra
     // Clear IRQ flags
     read_irq(drv->config);
 
+    // Clear event flags
+    chEvtGetAndClearFlags(&drv->listener);
+
     // Reset FIFO & transmit
     trf797x_command(drv->config->spi, TRF797X_CMD_RESET_FIFO);
-    trf797x_command_transmit(drv->config->spi, tr->txbuf, tr->txbits, FALSE);
+    trf797x_command_transmit(drv->config->spi, tr->txbits, FALSE);
 
-    // Wait for end of TX
-    if(chEvtWaitAnyTimeout(EVENT_MASK(drv->config->event), TIME_INFINITE) == 0) {
-        return TRF797X_ERR_TIMEOUT;
-    }
+    // Fill FIFO
+    const void *tx_buf = tr->txbuf;
+    int tx_bytes = (tr->txbits + 7) / 8;
+    int len = MIN(tx_bytes, TRF797X_FIFO_SIZE);
+    trf797x_register_write(drv->config->spi, TRF797X_REG_FIFO, tx_buf, len);
 
-    flags = chEvtGetAndClearFlags(&drv->listener);
+    tx_buf+=len;
+    tx_bytes-=len;
 
-    if(flags & EVENT_STOP) {
-       return TRF797X_ERR_PROBE;
-    }
+    // Continuous transmit
+    do {
+        // Wait for IRQ
+        if (chEvtWaitAnyTimeout(EVENT_MASK(drv->config->event), TIME_INFINITE) == 0) {
+            return TRF797X_ERR_TIMEOUT;
+        }
 
-    irq = read_irq(drv->config);
+        flags = chEvtGetAndClearFlags(&drv->listener);
+        if (flags & EVENT_STOP) return TRF797X_ERR_CANCELLED;
 
-    if(irq & TRF7970X_IRQ_STATUS_TX) {
-        //TODO: wait for RX interrupt
-    }
+        irq = read_irq(drv->config);
 
-    //TODO: read fifo
+        if(irq & TRF7970X_IRQ_STATUS_FIFO) {
+            if(tx_bytes > 0) {
+                const int fifo_bytes = TRF797X_FIFO_SIZE - read_fifo_bytes(drv);
+                len = MIN(tx_bytes, fifo_bytes);
+                if(len > 0) {
+                    trf797x_register_write(drv->config->spi, TRF797X_REG_FIFO, tx_buf, len);
+                    tx_buf+=len;
+                    tx_bytes-=len;
+                }
+            }
+        }
+
+    }while(irq != TRF7970X_IRQ_STATUS_TX);
+
+
+    void *rx_buf = tr->rxbuf;
+    int rx_bytes = (tr->rxbits + 7) / 8;
+    tr->rxbits = 0;
+
+    // Continuous receive
+    do {
+        // Wait for IRQ
+        if (chEvtWaitAnyTimeout(EVENT_MASK(drv->config->event), tr->timeout) == 0) {
+            return TRF797X_ERR_TIMEOUT;
+        }
+
+        flags = chEvtGetAndClearFlags(&drv->listener);
+        if (flags & EVENT_STOP) return TRF797X_ERR_CANCELLED;
+
+        irq = read_irq(drv->config);
+
+        if(irq & TRF7970X_IRQ_STATUS_ERROR) {
+            return irq2error(irq);
+        }
+
+        if(irq & TRF7970X_IRQ_STATUS_FIFO) {
+            int fifo_bytes = read_fifo_bytes(drv);
+
+            if(rx_bytes > 0) {
+                len = MIN(rx_bytes, fifo_bytes);
+
+                if(len > 0) {
+                    trf797x_register_read(drv->config->spi, TRF797X_REG_FIFO, rx_buf, len);
+                    rx_buf+=len;
+                    rx_bytes-=len;
+                    fifo_bytes-=len;
+                    tr->rxbits+=len*8;
+                }
+            }
+
+            if(fifo_bytes > 0) {
+                uint8_t tmp[fifo_bytes];
+                trf797x_register_read(drv->config->spi, TRF797X_REG_FIFO, tmp, fifo_bytes);
+            }
+        }
+
+    }while(irq != TRF7970X_IRQ_STATUS_SRX);
+
     return 0;
 }
 
 void trf797x_initiator_stop(Trf797xInitiatorDriver *drv, bool shutdown) {
+
+    ACQUIRE_BUS_FOR_SCOPE(drv);
 
     if(!shutdown) {
         rf_off(drv->config);
@@ -87,5 +170,4 @@ void trf797x_initiator_stop(Trf797xInitiatorDriver *drv, bool shutdown) {
     }
 
     trf797x_stop((Trf797xDriver *) drv, shutdown);
-    trf797x_release_bus(drv->config->spi);
 }

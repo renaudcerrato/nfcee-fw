@@ -43,15 +43,15 @@ typedef struct Trf797xInitiatorDriver {
 #define TRF797X_FLAG_RX_IGNORE_PARITY_ERROR BIT(3)  /**< disable parity checks (ISO14443A) */
 
 struct trf797x_transfer {
-    void    *txbuf;
-    size_t  txbits;
-    int     txflags;
+    const void      *txbuf;
+    size_t          txbits;
+    int             txflags;
 
-    void    *rxbuf;
-    size_t  rxbits;     /**< input: size of rxbuf (in bits), output: number of bits received in rxbuf */
-    int     rxflags;
+    void            *rxbuf;
+    size_t          rxbits;     /**< input: size of rxbuf (in bits), output: number of bits received in rxbuf */
+    int             rxflags;
 
-    systime_t   timeout;
+    systime_t       timeout;
 };
 
 /**

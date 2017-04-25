@@ -58,9 +58,8 @@ void trf797x_register_write(SPIDriver *spi, trf797x_reg_t adr, const void *data,
     spiSend(spi, len, data);
 }
 
-void trf797x_command_transmit(SPIDriver *spi, const void *data, size_t bits, bool crc) {
+void trf797x_command_transmit(SPIDriver *spi, size_t bits, bool crc) {
     const uint8_t txlength[2] = { (uint8_t) (bits >> 7),  (uint8_t) (((bits & 0xFF) << 1) | ((bits % 8) != 0))};
     trf797x_command(spi, crc ? TRF797X_CMD_TX : TRF797X_CMD_TX_NO_CRC);
     trf797x_register_write(spi, TRF797X_REG_TX_LENGTH1, &txlength, 2);
-    spiSend(spi, (bits + 7) / 8, data);
 }

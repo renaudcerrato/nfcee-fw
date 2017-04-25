@@ -10,18 +10,17 @@ enum trf797x_state {
     TRF797X_ST_PWR_OFF,
     TRF797X_ST_RF_OFF,
     TRF797X_ST_IDLE,
-    TRF797X_ST_WAIT_FOR_TX,
-    TRF797X_ST_WAIT_FOR_RX,
-    TRF797X_ST_STOP,
 };
 
 /** Error codes */
-#define TRF797X_ERR_TIMEOUT               -62
-#define TRF797X_ERR_PROBE                 -100
-#define TRF797X_ERR_CHECKSUM              -1001
-#define TRF797X_ERR_PARITY                -1002
-#define TRF797X_ERR_FRAMING               -1003
-#define TRF797X_ERR_COLLISION             -1004
+#define TRF797X_ERR_IO              -1
+#define TRF797X_ERR_TIMEOUT         -62
+#define TRF797X_ERR_PROBE           -100
+#define TRF797X_ERR_CANCELLED       -200
+#define TRF797X_ERR_CHECKSUM        -1001
+#define TRF797X_ERR_PARITY          -1002
+#define TRF797X_ERR_FRAMING         -1003
+#define TRF797X_ERR_COLLISION       -1004
 
 
 typedef struct {
