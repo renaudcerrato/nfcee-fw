@@ -1,5 +1,6 @@
 #include "ch.h"
 #include "hal.h"
+#include "gpio.h"
 
 /*
  * This is a periodic thread that does absolutely nothing except flashing
@@ -11,9 +12,9 @@ static THD_FUNCTION(Thread1, arg) {
   (void)arg;
   chRegSetThreadName("blinker");
   while (true) {
-    palSetPad(GPIOD, GPIOD_LED3);       /* Orange.  */
+    gpioSetPad(GPIO_LED0);
     chThdSleepMilliseconds(500);
-    palClearPad(GPIOD, GPIOD_LED3);     /* Orange.  */
+    gpioClearPad(GPIO_LED0);
     chThdSleepMilliseconds(500);
   }
 }
