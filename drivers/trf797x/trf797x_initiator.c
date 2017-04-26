@@ -160,12 +160,11 @@ int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf79
 
 void trf797x_initiator_stop(Trf797xInitiatorDriver *drv, bool shutdown) {
 
-    ACQUIRE_FOR_SCOPE(drv->config->spi);
+    trf797x_stop((Trf797xDriver *) drv, shutdown);
 
     if(!shutdown) {
+        ACQUIRE_FOR_SCOPE(drv->config->spi);
         rf_off(drv);
         drv->state = TRF797X_ST_RF_OFF;
     }
-
-    trf797x_stop((Trf797xDriver *) drv, shutdown);
 }
