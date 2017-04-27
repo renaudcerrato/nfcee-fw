@@ -2,8 +2,8 @@
 #include "trf797x_lld.h"
 
 
-#define gpio_set(spec) do{ palSetPad(spec.port, spec.pin); }while(0)
-#define gpio_clr(spec) do{ palClearPad(spec.port, spec.pin); }while(0)
+#define gpio_set(gpio) do{ gpioSetPad(gpio); }while(0)
+#define gpio_clr(gpio) do{ gpioClearPad(gpio); }while(0)
 
 
 /**

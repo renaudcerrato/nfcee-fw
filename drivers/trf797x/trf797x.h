@@ -22,11 +22,6 @@ enum trf797x_state {
 #define TRF797X_ERR_COLLISION       -1004
 
 
-typedef struct {
-    ioportid_t      port;
-    ioportmask_t    pin;
-} trf_gpio_spec_t;
-
 enum trf797x_sys_clk_divider {
     TRF7970X_SYS_CLK_DISABLED = 0,
     TRF7970X_SYS_CLK_DIV1,
@@ -52,9 +47,9 @@ enum trf797x_vin_voltage {
                 enum trf797x_sys_clk_divider    div;                        \
                 enum trf797x_vin_voltage        vin;                        \
                 struct {                                                    \
-                    trf_gpio_spec_t     en;                                 \
-                    trf_gpio_spec_t     mod;                                \
-                    trf_gpio_spec_t     io[8];                              \
+                    gpio_t     en;                                          \
+                    gpio_t     mod;                                         \
+                    gpio_t     io[8];                                       \
                 } gpio;
 
 typedef struct Trf797xConfig {
