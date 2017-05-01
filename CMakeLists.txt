@@ -13,14 +13,14 @@ INCLUDE_DIRECTORIES(
         config
         board
         drivers/trf797x
-        drivers/gpio/ports/stm32/v2/
         drivers/gpio
+        drivers/gpio/stm32/v2/
 )
 
 SET(SOURCE_FILES
         main.c
         board/board.c
-        drivers/gpio/ports/stm32/v2/gpio_lld.c
+        drivers/gpio/stm32/v2/gpio_lld.c
         drivers/trf797x/trf797x_lld.c
         drivers/trf797x/trf797x.c
         drivers/trf797x/trf797x_initiator.c
