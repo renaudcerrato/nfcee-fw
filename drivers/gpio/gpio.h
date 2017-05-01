@@ -1,10 +1,6 @@
 #ifndef _GPIO_H
 #define _GPIO_H
 
-#ifndef _HAL_H_
-#error you should not include <gpio.h> directly, include <hal.h> instead.
-#endif
-
 #if HAL_USE_PAL == TRUE
 #error this driver is not compatible with the pal driver.
 #endif
