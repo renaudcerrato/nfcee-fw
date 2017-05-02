@@ -21,7 +21,6 @@ static void reset_hardware(const Trf797xConfig *cfg) {
     chThdSleepMilliseconds(4);
     gpio_set(cfg->gpio.en);
     chThdSleepMilliseconds(5);  // how much?
-    spiUnselect(cfg->spi);
 }
 
 static bool trf797x_initialize(const Trf797xConfig *cfg) {
