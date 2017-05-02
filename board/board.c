@@ -44,6 +44,7 @@ void boardInit(void) {
     // TRF7970A
     gpioClearPad(GPIO_EN);
     gpioClearPad(GPIO_EN2);
+    gpioSetPad(GPIO_IO4);       // unselect
 
     CONFIGURE_PAD(GPIO_EN);
     CONFIGURE_PAD(GPIO_EN2);

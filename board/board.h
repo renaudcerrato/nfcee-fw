@@ -88,6 +88,8 @@
 #define GPIO_IO7                    GPIO_B(5)       // SPI1_MOSI
 #define GPIO_IO7_MODE               GPIO_MODE_ALTERNATE(5) | GPIO_STM32_OSPEED_HIGHEST
 
+#define GPIO_CS                     GPIO_IO4
+
 
 #if !defined(_FROM_ASM_)
 #ifdef __cplusplus
