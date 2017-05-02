@@ -19,9 +19,9 @@ static const SPIConfig trf797x_spicfg = {
         SPI_CR1_BR_2
 #elif (STM32_PCLK1 / 64) <= TRF797X_SPI_CLK_FREQ_MAX
         SPI_CR1_BR_2 | SPI_CR1_BR_0
-#elif (STM32_PCLK1 / 128) <= TRF797X_SPI_CLK_FREQ
+#elif (STM32_PCLK1 / 128) <= TRF797X_SPI_CLK_FREQ_MAX
         SPI_CR1_BR_2 | SPI_CR1_BR_1
-#elif (STM32_PCLK1 / 256) <= TRF797X_SPI_CLK_FREQ
+#elif (STM32_PCLK1 / 256) <= TRF797X_SPI_CLK_FREQ_MAX
         SPI_CR1_BR_2 | SPI_CR1_BR_1 | SPI_CR1_BR_0
 #else
         #error "unable to compute SPI baudrate for given TRF797X_SPI_CLK_FREQ_MAX"
