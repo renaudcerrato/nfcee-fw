@@ -12,10 +12,11 @@
 #define REGISTER_READ(adr, cnt)         (CMD_BIT_READ | REGISTER(adr, cnt))
 #define COMMAND(cmd)                    (CMD_BIT_CTRL | CMD_BIT_OPCODE(cmd))
 
-#ifndef WAIT_NANOSECOND
-#warning "[TODO] WAIT_NANOSECOND is not defined"
-#define WAIT_NANOSECOND(n)
+#ifndef NS2RTC
+#define NS2RTC(freq, nsec)		        (rtcnt_t)(((nsec) * (freq/1000UL) + 999999UL)/1000000UL)
 #endif
+
+#define WAIT_NANOSECOND(n)              osalSysPolledDelayX(NS2RTC(SystemCoreClock, n))
 
 #define TIMING_NSS_RISING_TO_FALLING_EDGE               300     // nanoseconds
 #define TIMING_NSS_FALLING_EDGE_TO_CLOCK                200     // nanoseconds
