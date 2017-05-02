@@ -2,6 +2,7 @@
 #define TRF797X_LLD_H
 
 #define TRF797X_FIFO_SIZE                  127
+#define TRF797X_SPI_CLK_FREQ_MAX           1000000UL
 
 /** TRF797x Registers */
 #define TRF797X_REG_CHIP_STATUS             0x00
