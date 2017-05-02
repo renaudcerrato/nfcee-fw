@@ -1,6 +1,10 @@
 #include "ch.h"
 #include "hal.h"
 #include "gpio.h"
+#include "chprintf.h"
+
+BaseSequentialStream* chpDebug = (BaseSequentialStream*) &SD1;
+
 
 /*
  * This is a periodic thread that does absolutely nothing except flashing
@@ -33,6 +37,8 @@ int main(void) {
   chSysInit();
 
   testInit();
+
+  chprintf(chpDebug, "[NFCEE] Hello world\r\n");
 
   while (true) {
     chThdSleepMilliseconds(500);
