@@ -25,18 +25,6 @@
 /*
  * GPIO definitions
  */
-#define GPIO_MOD                    GPIO_A(1)
-#define GPIO_MOD_MODE               GPIO_MODE_INPUT_PULLUP
-
-#define GPIO_DM_DATA_OUT            GPIO_A(2)
-#define GPIO_DM_DATA_OUT_MODE       GPIO_MODE_INPUT_PULLUP
-
-#define GPIO_SPI1_SCK               GPIO_A(5)
-#define GPIO_SPI1_SCK_MODE          GPIO_MODE_ALTERNATE(5) | GPIO_STM32_OSPEED_HIGHEST
-
-#define GPIO_SDM_TX                 GPIO_A(8)
-#define GPIO_SDM_TX_MODE            GPIO_MODE_INPUT_PULLUP
-
 #define GPIO_UART_TX                GPIO_A(9)
 #define GPIO_UART_TX_MODE           GPIO_MODE_ALTERNATE(7) | GPIO_STM32_OSPEED_HIGHEST
 
@@ -49,15 +37,6 @@
 #define GPIO_OTG_FS_DP              GPIO_A(12)
 #define GPIO_OTG_FS_DP_MODE         GPIO_MODE_ALTERNATE(10) | GPIO_STM32_OSPEED_HIGHEST
 
-#define GPIO_SPI3_SCK               GPIO_B(3)
-#define GPIO_SPI3_SCK_MODE          GPIO_MODE_ALTERNATE(6) | GPIO_STM32_OSPEED_HIGHEST
-
-#define GPIO_SPI_MISO               GPIO_B(4)
-#define GPIO_SPI_MISO_MODE          GPIO_MODE_ALTERNATE(5)
-
-#define GPIO_SPI_MOSI               GPIO_B(5)
-#define GPIO_SPI_MOSI_MODE          GPIO_MODE_ALTERNATE(5) | GPIO_STM32_OSPEED_HIGHEST
-
 #define GPIO_LED0                   GPIO_B(6)
 #define GPIO_LED0_MODE              GPIO_MODE_OUTPUT_PUSHPULL
 
@@ -67,8 +46,11 @@
 #define GPIO_BUTTON                 GPIO_B(8)
 #define GPIO_BUTTON_MODE            GPIO_MODE_INPUT
 
-#define GPIO_DM_CLK                 GPIO_B(12)
-#define GPIO_DM_CLK_MODE            GPIO_MODE_INPUT_PULLUP
+#define GPIO_MOD                    GPIO_A(1)
+#define GPIO_MOD_MODE               GPIO_MODE_INPUT_PULLUP
+
+#define GPIO_SPI1_SCK               GPIO_A(5)
+#define GPIO_SPI1_SCK_MODE          GPIO_MODE_ALTERNATE(5) | GPIO_STM32_OSPEED_HIGHEST
 
 #define GPIO_EN2                    GPIO_B(13)
 #define GPIO_EN2_MODE               GPIO_MODE_OUTPUT_PUSHPULL
@@ -88,14 +70,23 @@
 #define GPIO_IO1                    GPIO_C(8)
 #define GPIO_IO1_MODE               GPIO_MODE_OUTPUT_PUSHPULL
 
-#define GPIO_SDM_TX_EN              GPIO_C(9)
-#define GPIO_SDM_TX_EN_MODE         GPIO_MODE_OUTPUT_PUSHPULL
+#define GPIO_IO2                    GPIO_C(9)
+#define GPIO_IO2_MODE               GPIO_MODE_OUTPUT_PUSHPULL
 
-#define GPIO_CS                     GPIO_C(10)
-#define GPIO_CS_MODE                GPIO_MODE_OUTPUT_PUSHPULL | GPIO_STM32_OSPEED_HIGHEST
+#define GPIO_IO3                    GPIO_A(8)
+#define GPIO_IO3_MODE               GPIO_MODE_INPUT_PULLUP
 
-#define GPIO_SPI3_MOSI              GPIO_C(12)
-#define GPIO_SPI3_MOSI_MODE         GPIO_MODE_ALTERNATE(6) | GPIO_STM32_OSPEED_HIGHEST
+#define GPIO_IO4                    GPIO_A(4)
+#define GPIO_IO4_MODE               GPIO_MODE_OUTPUT_PUSHPULL | GPIO_STM32_OSPEED_HIGHEST
+
+#define GPIO_IO5                    GPIO_B(12)
+#define GPIO_IO5_MODE               GPIO_MODE_INPUT_PULLUP
+
+#define GPIO_IO6                    GPIO_B(4)       // SPI1_MISO
+#define GPIO_IO6_MODE               GPIO_MODE_ALTERNATE(5)
+
+#define GPIO_IO7                    GPIO_B(5)       // SPI1_MOSI
+#define GPIO_IO7_MODE               GPIO_MODE_ALTERNATE(5) | GPIO_STM32_OSPEED_HIGHEST
 
 
 #if !defined(_FROM_ASM_)
