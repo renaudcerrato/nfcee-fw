@@ -40,7 +40,7 @@ void trf797x_initiator_driver_init(Trf797xInitiatorDriver *driver) {
 
 int trf797x_initiator_start(Trf797xInitiatorDriver *drv, const Trf797xInitiatorConfig *config) {
 
-    ACQUIRE_FOR_SCOPE(drv->config->spi);
+    ACQUIRE_FOR_SCOPE(config->spi);
 
     const int result = trf797x_start((Trf797xDriver *) drv, (const Trf797xConfig *) config);
     if(result < 0) return result;
