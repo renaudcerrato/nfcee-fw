@@ -15,6 +15,7 @@ INCLUDE_DIRECTORIES(
         drivers/trf797x
         drivers/gpio
         drivers/gpio/stm32/v2/
+        libs/trace/
 )
 
 SET(SOURCE_FILES

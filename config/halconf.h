@@ -105,7 +105,7 @@
  * @brief   Enables the SERIAL subsystem.
  */
 #ifndef HAL_USE_SERIAL
-#define HAL_USE_SERIAL              FALSE
+#define HAL_USE_SERIAL              TRUE
 #endif
 
 /**
@@ -146,7 +146,7 @@
  *          default configuration.
  */
 #ifndef SERIAL_DEFAULT_BITRATE
-#define SERIAL_DEFAULT_BITRATE      38400
+#define SERIAL_DEFAULT_BITRATE      230400
 #endif
 
 /**

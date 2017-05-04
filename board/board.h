@@ -21,6 +21,11 @@
  */
 #define STM32_VDD                   330U
 
+/*
+ * TRACE Setupt
+ */
+#define TRACE_SD                    SD1
+
 
 /*
  * GPIO definitions
