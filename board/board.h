@@ -24,7 +24,11 @@
 /*
  * TRACE definition
  */
+#if defined(USB_CDC_TRACE)
+#define TRACE_SD					SDU1
+#else
 #define TRACE_SD					SD1
+#endif
 
 /*
  * GPIO definitions

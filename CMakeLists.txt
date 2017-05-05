@@ -26,9 +26,11 @@ SET(SOURCE_FILES
         drivers/trf797x/trf797x_lld.c
         drivers/trf797x/trf797x.c
         drivers/trf797x/trf797x_initiator.c
-)
+        libs/trace/trace.c)
 
 ADD_DEFINITIONS(-DCORTEX_USE_FPU=TRUE)
+ADD_DEFINITIONS(-DUSB_CDC_TRACE)
+
 SET(STM32_LINKER_SCRIPT ${ChibiOS_LINKER_SCRIPT})
 
 ###
