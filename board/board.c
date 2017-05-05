@@ -82,6 +82,4 @@ void boardInit(void) {
     // Configure SPI
     spiStart(&SPID1, &trf797x_spicfg);
 
-    // Configure UART1
-    sdStart(&TRACE_SD, NULL);
 }

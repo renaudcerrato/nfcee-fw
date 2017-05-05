@@ -7,6 +7,14 @@
 
 #include "chprintf.h"
 
+void trace_init(void);
+
+#if defined(USB_CDC_TRACE)
+#define trace(x...)			if(serusbcfg.usbp->state == USB_ACTIVE)	{ \
+								chprintf((BaseSequentialStream *)&TRACE_SD, x); \
+							}
+#else
 #define trace(x...)       chprintf((BaseSequentialStream *)&TRACE_SD, x)
+#endif //USB_CDC_TRACE
 
 #endif //NFCEE_TRACE_H
