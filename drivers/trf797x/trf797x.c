@@ -17,7 +17,7 @@ static void reset_hardware(const Trf797xConfig *cfg) {
 
     spiUnselect(cfg->spi);
     chThdSleepMilliseconds(2);
-    spiSelect(cfg->spi);        // is it really necessary?
+    spiSelect(cfg->spi);
     chThdSleepMilliseconds(4);
     gpio_set(cfg->gpio.en);
     chThdSleepMilliseconds(5);  // how much?
