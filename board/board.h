@@ -22,10 +22,9 @@
 #define STM32_VDD                   330U
 
 /*
- * TRACE Setupt
+ * TRACE definition
  */
-#define TRACE_SD                    SD1
-
+#define TRACE_SD					SD1
 
 /*
  * GPIO definitions
@@ -69,13 +68,13 @@
 #define GPIO_IRQ                    GPIO_C(6)
 #define GPIO_IRQ_MODE               GPIO_MODE_INPUT_PULLUP
 
-#define GPIO_IO0                    GPIO_C(7)
+#define GPIO_IO0                    GPIO_C(9)
 #define GPIO_IO0_MODE               GPIO_MODE_OUTPUT_PUSHPULL
 
-#define GPIO_IO1                    GPIO_C(8)
+#define GPIO_IO1                    GPIO_C(10)
 #define GPIO_IO1_MODE               GPIO_MODE_OUTPUT_PUSHPULL
 
-#define GPIO_IO2                    GPIO_C(9)
+#define GPIO_IO2                    GPIO_C(11)
 #define GPIO_IO2_MODE               GPIO_MODE_OUTPUT_PUSHPULL
 
 #define GPIO_IO3                    GPIO_A(8)
@@ -100,7 +99,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-  void boardInit(void);
+void boardInit(void);
 #ifdef __cplusplus
 }
 #endif
