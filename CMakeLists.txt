@@ -4,7 +4,7 @@ INCLUDE(Environment.cmake)
 PROJECT(nfcee)
 ENABLE_LANGUAGE(ASM)
 
-FIND_PACKAGE(ChibiOS 16 COMPONENTS rt hal ext gpt icu serial spi st usb chprintf memstreams nullstreams evtimer syscalls REQUIRED)
+FIND_PACKAGE(ChibiOS 16 COMPONENTS rt hal ext gpt icu serial spi st usb serial_usb chprintf memstreams nullstreams evtimer syscalls REQUIRED)
 FIND_PROGRAM(OPENOCD openocd)
 
 INCLUDE_DIRECTORIES(
@@ -20,6 +20,7 @@ INCLUDE_DIRECTORIES(
 
 SET(SOURCE_FILES
         main.c
+        usbcfg.c
         board/board.c
         drivers/gpio/stm32/v2/gpio_lld.c
         drivers/trf797x/trf797x_lld.c

@@ -112,7 +112,7 @@
  * @brief   Enables the SERIAL over USB subsystem.
  */
 #ifndef HAL_USE_SERIAL_USB
-#define HAL_USE_SERIAL_USB          FALSE
+#define HAL_USE_SERIAL_USB          TRUE
 #endif
 
 /**
@@ -133,7 +133,7 @@
  * @brief   Enables the USB subsystem.
  */
 #ifndef HAL_USE_USB
-#define HAL_USE_USB                 FALSE
+#define HAL_USE_USB                 TRUE
 #endif
 
 /*===========================================================================*/
