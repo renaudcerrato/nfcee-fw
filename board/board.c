@@ -7,6 +7,7 @@ static const SPIConfig trf797x_spicfg = {
         NULL,
         GPIO_PORT(GPIO_IO4),
         GPIO_PAD(GPIO_IO4),
+        SPI_CR1_CPHA |
 #if (STM32_PCLK1 / 2) <= TRF797X_SPI_CLK_FREQ_MAX
         0
 #elif (STM32_PCLK1 / 4) <= TRF797X_SPI_CLK_FREQ_MAX
@@ -81,6 +82,6 @@ void boardInit(void) {
     // Configure SPI
     spiStart(&SPID1, &trf797x_spicfg);
 
-	// Configure UART1
-	sdStart(&TRACE_SD, NULL);
+    // Configure UART1
+    sdStart(&TRACE_SD, NULL);
 }
