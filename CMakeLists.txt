@@ -21,6 +21,7 @@ INCLUDE_DIRECTORIES(
 SET(SOURCE_FILES
         main.c
         usbcfg.c
+        nfc.c
         board/board.c
         drivers/gpio/stm32/v2/gpio_lld.c
         drivers/trf797x/trf797x_lld.c
