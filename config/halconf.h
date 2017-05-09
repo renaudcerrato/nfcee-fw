@@ -35,7 +35,7 @@
  * @brief   Enables the EXT subsystem.
  */
 #ifndef HAL_USE_EXT
-#define HAL_USE_EXT                 FALSE
+#define HAL_USE_EXT                 TRUE
 #endif
 
 /**

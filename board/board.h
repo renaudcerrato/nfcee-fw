@@ -69,8 +69,8 @@
 #define GPIO_ASK_OOK                GPIO_B(15)
 #define GPIO_ASK_OOK_MODE           GPIO_MODE_OUTPUT_PUSHPULL
 
-#define GPIO_IRQ                    GPIO_C(6)
-#define GPIO_IRQ_MODE               GPIO_MODE_INPUT_PULLUP
+#define GPIO_IRQ                    GPIO_D(2)
+#define GPIO_IRQ_MODE               GPIO_MODE_INPUT_PULLDOWN
 
 #define GPIO_IO0                    GPIO_C(11)
 #define GPIO_IO0_MODE               GPIO_MODE_OUTPUT_PUSHPULL
@@ -98,6 +98,12 @@
 
 #define GPIO_CS                     GPIO_IO4
 
+/*
+ * EXT Driver
+ */
+#define TRF797X_EXT_DRIVER          EXTD1
+#define TRF797X_EXT_MODE_GPIO       EXT_MODE_GPIOD
+#define TRF797X_EXT_CHANNEL         2
 
 #if !defined(_FROM_ASM_)
 #ifdef __cplusplus
