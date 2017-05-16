@@ -34,6 +34,7 @@ static THD_FUNCTION(NfcThread, arg) {
     (void)arg;
 
     uint8_t rxbuf[16];
+    bool led = TRUE;
 
     struct trf797x_transfer tr = {
             .txbuf = "\x26",    // REQA
@@ -48,17 +49,24 @@ static THD_FUNCTION(NfcThread, arg) {
 
     while (true) {
 
+        if(led)
+            gpioSetPad(GPIO_LED1);
+        else
+            gpioClearPad(GPIO_LED1);
+
         if(trf797x_initiator_start(&driver, &config) == 0) {
 
             int len = trf797x_initiator_transceive(&driver, &tr);
             if(len > 0) {
-                trace("REQB!");
-            }
+                trace("ATQA = %02X%02X", rxbuf[0], rxbuf[1]);
+            }else
+                chThdSleepMilliseconds(800);
 
             trf797x_initiator_stop(&driver, TRUE);
         }
 
-        chThdSleepMilliseconds(200);
+        chThdSleepMilliseconds(100);
+        led = !led;
     }
 };
 
