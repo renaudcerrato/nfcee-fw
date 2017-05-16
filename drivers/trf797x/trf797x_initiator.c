@@ -48,9 +48,7 @@ int trf797x_initiator_start(Trf797xInitiatorDriver *drv, const Trf797xInitiatorC
                             TRF7970X_IRQ_STATUS_ERROR | TRF7970X_IRQ_STATUS_FIFO);
 
     // Keep CRC into the RX buffer
-    trf797x_register_write1(config->spi, TRF797X_REG_ISO_CTRL,
-                            config->proto | TRF7970X_ISO_CTRL_RFID | TRF7970X_ISO_CTRL_RX_CRC_N |
-                            TRF7970X_ISO_CTRL_DIR_MODE);
+    trf797x_register_write1(config->spi, TRF797X_REG_ISO_CTRL, config->proto | TRF7970X_ISO_CTRL_RX_CRC_N);
 
     // FIFO levels
     trf797x_register_write1(config->spi, TRF797X_REG_FIFO_IRQ_LEVELS,
