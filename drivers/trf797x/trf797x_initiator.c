@@ -11,8 +11,6 @@
 #define rf_off(drv)             _rf(drv, FALSE)
 
 #define read_irq(drv)           trf797x_register_read1(drv->config->spi, TRF797X_REG_IRQ_STATUS)
-#define read_fifo_bytes(drv)    (trf797x_register_read1(drv->config->spi, TRF797X_REG_FIFO_STATUS)              \
-                                & ~TRF797X_FIFO_STATUS_OVERFLOW)
 
 #define __CLEANUP__(m)          __attribute__ ((__cleanup__(m)))
 #define ACQUIRE_FOR_SCOPE(spi)  SPIDriver *__spi __CLEANUP__(do_release) = spi;                                 \
@@ -83,7 +81,7 @@ int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf79
     // Clear event flags
     chEvtGetAndClearFlags(&drv->listener);
 
-    // Transmit
+    // Fill FIFO & transmit
     int len = trf797x_transmit(drv->config->spi, tx_buf, tr->txbits, FALSE);
 
     tx_buf+=len;
@@ -92,9 +90,7 @@ int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf79
     // Continuous transmit
     do {
         // Wait for IRQ
-        if (chEvtWaitAnyTimeout(EVENT_MASK(drv->config->event), MS2ST(1000)) == 0) {
-            volatile int len = read_fifo_bytes(drv);
-            volatile int irq = read_irq(drv);
+        if (chEvtWaitAnyTimeout(EVENT_MASK(drv->config->event), TIME_INFINITE) == 0) {
             return TRF797X_ERR_TIMEOUT;
         }
 
@@ -131,8 +127,10 @@ int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf79
 
         if(irq & TRF7970X_IRQ_STATUS_FIFO) {
             len = trf797x_fifo_drain(drv->config->spi, rx_buf, rx_bytes);
-            rx_buf+=len;
-            rx_bytes-=len;
+            if(len > 0) {
+                rx_buf+=len;
+                rx_bytes-=len;
+            }
         }
 
     }while(irq != TRF7970X_IRQ_STATUS_SRX);
