@@ -68,7 +68,7 @@ int trf797x_start(Trf797xDriver *drv, const Trf797xConfig *config) {
     drv->config = config;
 
     chEvtObjectInit(&drv->event);
-    chEvtRegisterMask(&drv->event, &drv->listener, EVENT_MASK(config->event));
+    chEvtRegister(&drv->event, &drv->listener, config->event);
 
     return 0;
 }
