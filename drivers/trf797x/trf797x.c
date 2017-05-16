@@ -66,15 +66,15 @@ int trf797x_start(Trf797xDriver *drv, const Trf797xConfig *config) {
 
     drv->state = TRF797X_ST_IDLE;
     drv->config = config;
+
+    chEvtObjectInit(&drv->event);
     chEvtRegisterMask(&drv->event, &drv->listener, EVENT_MASK(config->event));
 
     return 0;
 }
 
 void tf797x_interrupt_hookI(Trf797xDriver *drv) {
-    chSysLockFromISR();
     chEvtBroadcastFlagsI(&drv->event, EVENT_IRQ);
-    chSysUnlockFromISR();
 }
 
 void trf797x_stop(Trf797xDriver *drv, bool shutdown) {
