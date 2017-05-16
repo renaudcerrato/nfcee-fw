@@ -63,10 +63,14 @@ size_t trf797x_register_read(SPIDriver *spi, trf797x_reg_t adr, void *data, size
     if(adr == TRF797X_REG_IRQ_STATUS && len == 1) {
         uint8_t tmp[2];
         trf797x_register_read(spi, adr, tmp, 2);
-        *(uint8_t *)data = tmp[0];
+        if(data) *(uint8_t *)data = tmp[0];
     }else {
         spi_lld_polled_exchange(spi, REGISTER_READ(adr, len));
-        spiReceive(spi, len, data);
+
+        if(data)
+            spiReceive(spi, len, data);
+        else
+            spiIgnore(spi, len);
     }
 
     if(len > 1) {
@@ -129,8 +133,7 @@ int trf797x_fifo_drain(SPIDriver *spi, void *data, size_t len) {
     }
 
     if(fifo_bytes > 0) {
-        uint8_t tmp[fifo_bytes];
-        trf797x_register_read(spi, TRF797X_REG_FIFO, tmp, fifo_bytes);
+        trf797x_register_read(spi, TRF797X_REG_FIFO, NULL, fifo_bytes);
     }
 
     return len;
