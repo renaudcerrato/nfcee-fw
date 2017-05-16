@@ -11,7 +11,7 @@ static struct Trf797xInitiatorConfig config = {
         .proto = TRF7970X_PROTO_RFID_14443A_106,
         .div = TRF7970X_SYS_CLK_DISABLED,
         .osc27m = FALSE,
-        .vin = TRF7970X_VIN_3V,
+        .vin = TRF7970X_VIN_5V,
         .gpio = {
                 .en = GPIO_EN,
                 .io = {
@@ -24,6 +24,7 @@ static struct Trf797xInitiatorConfig config = {
 void trf797x_extcallback(EXTDriver *extp, expchannel_t channel) {
     (void)extp; (void)channel;
     chSysLockFromISR();
+    gpioSetPad(GPIO_LED1);
     tf797x_interrupt_hookI((Trf797xDriver *)&driver);
     chSysUnlockFromISR();
 }
@@ -49,7 +50,6 @@ static THD_FUNCTION(NfcThread, arg) {
     while (true) {
 
         if(trf797x_initiator_start(&driver, &config) == 0) {
-            gpioSetPad(GPIO_LED1);
 
             int len = trf797x_initiator_transceive(&driver, &tr);
             if(len > 0) {
@@ -60,7 +60,6 @@ static THD_FUNCTION(NfcThread, arg) {
         }
 
         chThdSleepMilliseconds(200);
-        gpioClearPad(GPIO_LED1);
     }
 };
 

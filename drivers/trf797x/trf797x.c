@@ -38,7 +38,11 @@ static bool trf797x_initialize(const Trf797xConfig *cfg) {
     }
 
     trf797x_register_write1(cfg->spi, TRF797X_REG_MODULATOR_SYS_CLK, mod_sys_clk);
+
     trf797x_register_write1(cfg->spi, TRF797X_REG_NFC_TARGET_DETECTION, 0);  // see errata
+
+    trf797x_register_write1(cfg->spi, TRF797X_REG_CHIP_STATUS,
+                            cfg->vin == TRF7970X_VIN_5V ? TRF797X_CHIP_STATUS_VRS5_3 : 0);
 
     return trf797x_register_read1(cfg->spi, TRF797X_REG_MODULATOR_SYS_CLK) == mod_sys_clk;
 }
