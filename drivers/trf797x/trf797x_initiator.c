@@ -100,8 +100,10 @@ int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf79
         if (irq & TRF7970X_IRQ_STATUS_FIFO) {
             if (tx_bytes > 0) {
                 len = trf797x_fifo_fill(drv->config->spi, tx_buf, tx_bytes);
-                tx_buf+=len;
-                tx_bytes-=len;
+                if(len > 0) {
+                    tx_buf+=len;
+                    tx_bytes-=len;
+                }
             }
         }
 
@@ -123,7 +125,7 @@ int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf79
             return irq2error(irq);
         }
 
-        if(irq & TRF7970X_IRQ_STATUS_FIFO) {
+        if(irq & (TRF7970X_IRQ_STATUS_FIFO | TRF7970X_IRQ_STATUS_SRX)) {
             len = trf797x_fifo_drain(drv->config->spi, rx_buf, rx_bytes);
             if(len > 0) {
                 rx_buf+=len;
