@@ -22,9 +22,8 @@ static struct Trf797xInitiatorConfig config = {
 };
 
 void trf797x_extcallback(EXTDriver *extp, expchannel_t channel) {
-    (void)extp; (void)channel;
+    (void) extp; (void) channel;
     chSysLockFromISR();
-    gpioSetPad(GPIO_LED1);
     tf797x_interrupt_hookI((Trf797xDriver *)&driver);
     chSysUnlockFromISR();
 }
