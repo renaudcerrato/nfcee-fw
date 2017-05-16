@@ -42,7 +42,7 @@ enum trf797x_vin_voltage {
 
 #define _trf79x_config_data                                                 \
                 SPIDriver                       *spi;                       \
-                int                             event;                      \
+                eventid_t                       event;                      \
                 bool                            osc27m;                     \
                 enum trf797x_sys_clk_divider    div;                        \
                 enum trf797x_vin_voltage        vin;                        \
