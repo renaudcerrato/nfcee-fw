@@ -85,14 +85,14 @@
                   TRF7970X_IRQ_STATUS_CRC_ERROR)
 
 /* Chip Status Control Register Bits */
-#define TRF7970A_CHIP_STATUS_VRS5_3             BIT(0)
-#define TRF7970A_CHIP_STATUS_REC_ON             BIT(1)
-#define TRF7970A_CHIP_STATUS_AGC_ON             BIT(2)
-#define TRF7970A_CHIP_STATUS_PM_ON              BIT(3)
-#define TRF7970A_CHIP_STATUS_RF_PWR             BIT(4)
-#define TRF7970A_CHIP_STATUS_RF_ON              BIT(5)
-#define TRF7970A_CHIP_STATUS_DIRECT             BIT(6)
-#define TRF7970A_CHIP_STATUS_STBY               BIT(7)
+#define TRF797X_CHIP_STATUS_VRS5_3             BIT(0)
+#define TRF797X_CHIP_STATUS_REC_ON             BIT(1)
+#define TRF797X_CHIP_STATUS_AGC_ON             BIT(2)
+#define TRF797X_CHIP_STATUS_PM_ON              BIT(3)
+#define TRF797X_CHIP_STATUS_RF_PWR             BIT(4)
+#define TRF797X_CHIP_STATUS_RF_ON              BIT(5)
+#define TRF797X_CHIP_STATUS_DIRECT             BIT(6)
+#define TRF797X_CHIP_STATUS_STBY               BIT(7)
 
 /* ISO Control Register Bits */
 #define TRF7970X_ISO_CTRL_NFC_NFCA_106          0x01
@@ -110,6 +110,15 @@
 
 #define TRF797X_FIFO_STATUS_OVERFLOW            BIT(7)
 
+#define TRF797X_FIFO_IRQ_LEVELS_WLH_124	        (0x0 << 2)
+#define TRF797X_FIFO_IRQ_LEVELS_WLH_120	        (0x1 << 2)
+#define TRF797X_FIFO_IRQ_LEVELS_WLH_112	        (0x2 << 2)
+#define TRF797X_FIFO_IRQ_LEVELS_WLH_96	        (0x3 << 2)
+#define TRF797X_FIFO_IRQ_LEVELS_WLL_4	        0x0
+#define TRF797X_FIFO_IRQ_LEVELS_WLL_8	        0x1
+#define TRF797X_FIFO_IRQ_LEVELS_WLL_16	        0x2
+#define TRF797X_FIFO_IRQ_LEVELS_WLL_32	        0x3
+
 typedef uint8_t trf797x_reg_t;
 typedef uint8_t trf797x_cmd_t;
 
@@ -117,10 +126,13 @@ typedef uint8_t trf797x_cmd_t;
 void trf797x_acquire_bus(SPIDriver *spi);
 
 void trf797x_command(SPIDriver *spi, trf797x_cmd_t cmd);
-void trf797x_command_transmit(SPIDriver *spi, size_t bits, bool crc);
 
 size_t trf797x_register_read(SPIDriver *spi, trf797x_reg_t adr, void *data, size_t len);
 void trf797x_register_write(SPIDriver *spi, trf797x_reg_t adr, const void *data, size_t len);
+
+int trf797x_transmit(SPIDriver *spi, const void *data, size_t bits, bool crc);
+int trf797x_fifo_fill(SPIDriver *spi, const void *data, size_t len);
+int trf797x_fifo_drain(SPIDriver *spi, void *data, size_t len);
 
 void trf797x_release_bus(SPIDriver *spi);
 

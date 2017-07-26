@@ -6,6 +6,7 @@
 #define NFCEE_TRACE_H
 
 #include "chprintf.h"
+#include "usbcfg.h"
 
 void trace_init(void);
 

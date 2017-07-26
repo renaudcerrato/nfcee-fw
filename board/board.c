@@ -3,6 +3,9 @@
 
 #define CONFIGURE_PAD(NAME)    gpioSetPadMode(NAME, NAME ## _MODE)
 
+
+void trf797x_extcallback(EXTDriver *extp, expchannel_t channel);
+
 static const SPIConfig trf797x_spicfg = {
         NULL,
         GPIO_PORT(GPIO_IO4),
@@ -29,6 +32,11 @@ static const SPIConfig trf797x_spicfg = {
 #endif
 };
 
+static const EXTConfig extcfg = {
+    {
+        [TRF797X_EXT_CHANNEL] = {EXT_CH_MODE_RISING_EDGE | TRF797X_EXT_MODE_GPIO, &trf797x_extcallback},
+    }
+};
 
 void __early_init(void) {
 
@@ -62,7 +70,6 @@ void boardInit(void) {
     CONFIGURE_PAD(GPIO_IO6);
     CONFIGURE_PAD(GPIO_IO7);
 
-
     // SPI1
     CONFIGURE_PAD(GPIO_SPI1_SCK);
 
@@ -82,4 +89,6 @@ void boardInit(void) {
     // Configure SPI
     spiStart(&SPID1, &trf797x_spicfg);
 
+    // Configure EXT driver
+    extStart(&EXTD1, &extcfg);
 }
