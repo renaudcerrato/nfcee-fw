@@ -3,7 +3,8 @@
 
 #define CONFIGURE_PAD(NAME)    gpioSetPadMode(NAME, NAME ## _MODE)
 
-const extern extcallback_t trf797x_extcallback;
+
+void trf797x_extcallback(EXTDriver *extp, expchannel_t channel);
 
 static const SPIConfig trf797x_spicfg = {
         NULL,

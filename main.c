@@ -6,8 +6,8 @@
  * This is a periodic thread that does absolutely nothing except flashing
  * a LED.
  */
-static THD_WORKING_AREA(waThread1, 128);
-static THD_FUNCTION(Thread1, arg) {
+static THD_WORKING_AREA(waBlinker, 128);
+static THD_FUNCTION(Blinker, arg) {
 
     int i = 0;
     (void)arg;
@@ -21,22 +21,18 @@ static THD_FUNCTION(Thread1, arg) {
     }
 }
 
-void testInit(void)
-{
-    /*
-     * Creates the example thread.
-     */
-    chThdCreateStatic(waThread1, sizeof(waThread1), NORMALPRIO, Thread1, NULL);
-}
-
 int main(void) {
 
     halInit();
     chSysInit();
 
     trace_init();
-    testInit();
+
     trace("[NFCEE] - Hello world\r\n");
+
+    // Blinker
+    chThdCreateStatic(waBlinker, sizeof(waBlinker), NORMALPRIO, Blinker, NULL);
+    // NFC Demo
     nfcStart();
 
     while (true) {
