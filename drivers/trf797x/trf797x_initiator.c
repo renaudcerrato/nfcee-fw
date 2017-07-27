@@ -56,7 +56,6 @@ int trf797x_initiator_start(Trf797xInitiatorDriver *drv, const Trf797xInitiatorC
 
     // Power-up the target
     rf_on(drv);
-    chThdSleepMilliseconds(5); //TODO: defer until transceive
 
     return 0;
 }

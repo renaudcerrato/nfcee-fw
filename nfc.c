@@ -56,6 +56,9 @@ static THD_FUNCTION(NfcThread, arg) {
 
         if(trf797x_initiator_start(&driver, &config) == 0) {
 
+            // Let target power-up
+            chThdSleepMilliseconds(5);
+
             int len = trf797x_initiator_transceive(&driver, &tr);
             if(len > 0) {
                 trace("ATQA = %02X%02X", rxbuf[0], rxbuf[1]);
