@@ -60,17 +60,17 @@ int trf797x_initiator_start(Trf797xInitiatorDriver *drv, const Trf797xInitiatorC
     return 0;
 }
 
-int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf797x_transfer *tr) {
+int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf797x_tx *tx, const struct trf797x_rx *rx) {
 
     ACQUIRE_FOR_SCOPE(drv->config->spi);
 
     eventflags_t flags;
     uint8_t irq;
 
-    const void *tx_buf = tr->txbuf;
-    void *rx_buf = tr->rxbuf;
-    int tx_bytes = (tr->txbits + 7) / 8;
-    int rx_bytes = (tr->rxbits + 7) / 8;
+    const void *tx_buf = tx->buf;
+    void *rx_buf = rx->buf;
+    size_t tx_bytes = tx->bytes;
+    size_t rx_bytes = rx->bytes;
 
     // Clear IRQ flags
     read_irq(drv);
@@ -79,7 +79,7 @@ int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf79
     chEvtGetAndClearFlags(&drv->listener);
 
     // Fill FIFO & transmit
-    int len = trf797x_transmit(drv->config->spi, tx_buf, tr->txbits, FALSE);
+    int len = trf797x_transmit(drv->config->spi, tx_buf, tx->bits, FALSE);
 
     tx_buf+=len;
     tx_bytes-=len;
@@ -111,7 +111,7 @@ int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf79
     // Continuous receive
     do {
         // Wait for IRQ
-        if (chEvtWaitAnyTimeout(EVENT_MASK(drv->config->event), tr->timeout) == 0) {
+        if (chEvtWaitAnyTimeout(EVENT_MASK(drv->config->event), rx->timeout) == 0) {
             return TRF797X_ERR_TIMEOUT;
         }
 
@@ -134,7 +134,7 @@ int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf79
 
     }while(irq != TRF7970X_IRQ_STATUS_SRX);
 
-    return (int) (rx_buf - tr->rxbuf);
+    return (int) (rx_buf - rx->buf);
 }
 
 void trf797x_initiator_stop(Trf797xInitiatorDriver *drv, bool shutdown) {

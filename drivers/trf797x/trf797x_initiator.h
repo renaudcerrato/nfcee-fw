@@ -35,14 +35,26 @@ typedef struct Trf797xInitiatorDriver {
     _trf79x_driver_data(Trf797xInitiatorConfig)
 } Trf797xInitiatorDriver;
 
-struct trf797x_transfer {
-    void            *txbuf;
-    size_t          txbits;
+struct trf797x_tx {
+    void                *buf;
+    union {
+        uint32_t bits;
+        struct {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+            uint32_t :3;
+            uint32_t bytes:29;
+#else
+            uint32_t bytes:29;
+            uint32_t :3;
+#endif
+        };
+    };
+};
 
-    void            *rxbuf;
-    size_t          rxbits;
-
-    systime_t       timeout;
+struct trf797x_rx {
+    void                *buf;
+    uint32_t            bytes;
+    systime_t           timeout;
 };
 
 /**
@@ -62,10 +74,11 @@ int trf797x_initiator_start(Trf797xInitiatorDriver *driver, const Trf797xInitiat
 /**
  * Transceive data to/from the device.
  * @param driver
- * @param tr
- * @return the # of bytes received in tr->rxbuf, or < 0 on error.
+ * @param tx
+ * @param rx
+ * @return the # of bytes received in rx->buf, or < 0 on error.
  */
-int trf797x_initiator_transceive(Trf797xInitiatorDriver *driver, const struct trf797x_transfer *tr);
+int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf797x_tx *tx, const struct trf797x_rx *rx);
 
 /**
  * Stop the driver.
