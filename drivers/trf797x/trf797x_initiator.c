@@ -60,7 +60,7 @@ int trf797x_initiator_start(Trf797xInitiatorDriver *drv, const Trf797xInitiatorC
     return 0;
 }
 
-int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf797x_tx *tx, const struct trf797x_rx *rx) {
+int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf797x_tx *tx, const struct trf797x_rx *rx, systime_t timeout) {
 
     ACQUIRE_FOR_SCOPE(drv->config->spi);
 
@@ -111,7 +111,7 @@ int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf79
     // Continuous receive
     do {
         // Wait for IRQ
-        if (chEvtWaitAnyTimeout(EVENT_MASK(drv->config->event), rx->timeout) == 0) {
+        if (chEvtWaitAnyTimeout(EVENT_MASK(drv->config->event), timeout) == 0) {
             return TRF797X_ERR_TIMEOUT;
         }
 

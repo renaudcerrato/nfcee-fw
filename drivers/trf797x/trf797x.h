@@ -79,7 +79,6 @@ struct trf797x_tx {
 struct trf797x_rx {
     void                *buf;
     uint32_t            bytes;
-    systime_t           timeout;
 };
 
 #include "trf797x_initiator.h"

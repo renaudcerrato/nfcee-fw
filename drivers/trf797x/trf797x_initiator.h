@@ -56,7 +56,7 @@ int trf797x_initiator_start(Trf797xInitiatorDriver *driver, const Trf797xInitiat
  * @param rx
  * @return the # of bytes received in rx->buf, or < 0 on error.
  */
-int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf797x_tx *tx, const struct trf797x_rx *rx);
+int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf797x_tx *tx, const struct trf797x_rx *rx, systime_t timeout);
 
 /**
  * Stop the driver.

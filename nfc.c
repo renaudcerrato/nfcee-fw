@@ -44,7 +44,6 @@ static THD_FUNCTION(NfcThread, arg) {
     struct trf797x_rx rx = {
             .buf = rxbuf,
             .bytes = sizeof(rxbuf),
-            .timeout = MS2ST(200)
     };
 
     chRegSetThreadName("nfc");
@@ -62,7 +61,7 @@ static THD_FUNCTION(NfcThread, arg) {
             // Let target power-up
             chThdSleepMilliseconds(5);
 
-            int len = trf797x_initiator_transceive(&driver, &tx, &rx);
+            int len = trf797x_initiator_transceive(&driver, &tx, &rx, MS2ST(200));
             if(len > 0) {
                 trace("ATQA = %02X%02X", rxbuf[0], rxbuf[1]);
             }else
