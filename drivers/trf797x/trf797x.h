@@ -60,6 +60,27 @@ typedef struct Trf797xDriver {
     _trf79x_driver_data(Trf797xConfig)
 } Trf797xDriver;
 
+struct trf797x_tx {
+    void                *buf;
+    union {
+        uint32_t bits;
+        struct {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+            uint32_t :3;
+            uint32_t bytes:29;
+#else
+            uint32_t bytes:29;
+            uint32_t :3;
+#endif
+        };
+    };
+};
+
+struct trf797x_rx {
+    void                *buf;
+    uint32_t            bytes;
+    systime_t           timeout;
+};
 
 #include "trf797x_initiator.h"
 
