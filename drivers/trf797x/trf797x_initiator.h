@@ -35,20 +35,12 @@ typedef struct Trf797xInitiatorDriver {
     _trf79x_driver_data(Trf797xInitiatorConfig)
 } Trf797xInitiatorDriver;
 
-#define TRF797X_FLAG_TX_SDM                 BIT(0)  /**< use special direct mode for emission (raw mode) */
-
-#define TRF797X_FLAG_RX_DM1                 BIT(0)  /**< use direct mode 1 for reception (raw mode) */
-#define TRF797X_FLAG_RX_LSB_FIRST           BIT(1)  /**< valid only if TRF797X_FLAG_RX_DM1 is set */
-#define TRF797X_FLAG_RX_IGNORE_PARITY_ERROR BIT(2)  /**< disable parity checks (ISO14443A) */
-
 struct trf797x_transfer {
     void            *txbuf;
     size_t          txbits;
-    int             txflags;
 
     void            *rxbuf;
     size_t          rxbits;
-    int             rxflags;
 
     systime_t       timeout;
 };
