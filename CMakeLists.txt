@@ -16,6 +16,7 @@ INCLUDE_DIRECTORIES(
         drivers/gpio
         drivers/gpio/stm32/v2/
         libs/trace/
+        libs/nfc/include/
 )
 
 SET(SOURCE_FILES
@@ -27,7 +28,9 @@ SET(SOURCE_FILES
         drivers/trf797x/trf797x_lld.c
         drivers/trf797x/trf797x.c
         drivers/trf797x/trf797x_initiator.c
-        libs/trace/trace.c)
+        libs/trace/trace.c
+        libs/nfc/iso14443.c
+)
 
 ADD_DEFINITIONS(-DCORTEX_USE_FPU=TRUE)
 ADD_DEFINITIONS(-DUSB_CDC_TRACE)
