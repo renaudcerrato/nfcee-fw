@@ -62,23 +62,12 @@ typedef struct Trf797xDriver {
 
 struct trf797x_tx {
     void                *buf;
-    union {
-        uint32_t bits;
-        struct {
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-            uint32_t :3;
-            uint32_t bytes:29;
-#else
-            uint32_t bytes:29;
-            uint32_t :3;
-#endif
-        };
-    };
+    size_t              bits;
 };
 
 struct trf797x_rx {
     void                *buf;
-    uint32_t            bytes;
+    size_t              len;
 };
 
 #include "trf797x_initiator.h"

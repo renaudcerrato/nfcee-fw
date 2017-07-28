@@ -43,7 +43,7 @@ static THD_FUNCTION(NfcThread, arg) {
 
     struct trf797x_rx rx = {
             .buf = rxbuf,
-            .bytes = sizeof(rxbuf),
+            .len = sizeof(rxbuf),
     };
 
     chRegSetThreadName("nfc");

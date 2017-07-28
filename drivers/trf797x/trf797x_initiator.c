@@ -69,8 +69,8 @@ int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf79
 
     const void *tx_buf = tx->buf;
     void *rx_buf = rx->buf;
-    size_t tx_bytes = tx->bytes;
-    size_t rx_bytes = rx->bytes;
+    size_t tx_bytes = (tx->bits + 7) / 8;
+    size_t rx_bytes = rx->len;
 
     // Clear IRQ flags
     read_irq(drv);
