@@ -29,7 +29,9 @@ SET(SOURCE_FILES
         drivers/trf797x/trf797x.c
         drivers/trf797x/trf797x_initiator.c
         libs/trace/trace.c
+        libs/nfc/nfc.c
         libs/nfc/iso14443.c
+        libs/nfc/iso14443a.c
 )
 
 ADD_DEFINITIONS(-DCORTEX_USE_FPU=TRUE)

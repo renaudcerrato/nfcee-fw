@@ -13,7 +13,7 @@ typedef enum {
 } nfc_digital_t;
 
 struct nfc_tx {
-    void                *buf;
+    const void          *buf;
     size_t              bits;
     struct nfc_tx       *next;
 };
@@ -24,14 +24,14 @@ struct nfc_rx {
 };
 
 typedef enum {
-    NFC_DEVICE_IOCW_SWITCH_RF = 0,
-    NFC_DEVICE_IOCR_FRAME_SIZE,
-} nfc_device_req_t;
+    NFC_IOCW_SWITCH_RF = 0,
+    NFC_IOCR_DEV_FRAME_SIZE,
+} nfc_iocreq_t;
 
 struct nfc_device_fops {
     int (*open)(void *, nfc_digital_t tech);
     int (*transceive)(void *, const struct nfc_tx *tx, const struct nfc_rx *rx, unsigned int timeout);
-    int (*ioctl)(void *, nfc_device_req_t, void *);
+    int (*ioctl)(void *, nfc_iocreq_t, void *);
     int (*close)(void *);
 };
 
@@ -47,7 +47,7 @@ typedef struct {
 } nfc_driver_t;
 
 int nfc_open(nfc_driver_t *driver);
-int nfc_transceive(nfc_driver_t *driver, const struct nfc_tx *tx, const struct nfc_rx *rx, unsigned int timeout);
+int nfc_transceive(nfc_driver_t *driver, const void *tx, size_t txlen, void *rx, size_t rxlen, unsigned int timeout);
 int nfc_close(nfc_driver_t *driver);
 
 #include "iso14443.h"
