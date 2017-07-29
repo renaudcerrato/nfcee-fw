@@ -23,16 +23,21 @@ struct nfc_rx {
     size_t              len;
 };
 
+typedef enum {
+    NFC_DEVICE_IOCW_SWITCH_RF = 0,
+    NFC_DEVICE_IOCR_FRAME_SIZE,
+} nfc_device_req_t;
+
 struct nfc_device_fops {
     int (*open)(void *, nfc_digital_t tech);
     int (*transceive)(void *, const struct nfc_tx *tx, const struct nfc_rx *rx, unsigned int timeout);
-    int (*switch_rf)(void *, bool on);
+    int (*ioctl)(void *, nfc_device_req_t, void *);
     int (*close)(void *);
 };
 
 struct nfc_device {
-    struct nfc_device_fops ops;
     void *priv;
+    struct nfc_device_fops ops;
 };
 
 #define _nfc_driver_data            struct nfc_device       *dev;       \

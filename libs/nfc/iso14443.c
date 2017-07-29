@@ -90,7 +90,14 @@ int nfc_iso14443_open(nfc_iso14443_driver_t *driver) {
     switch(driver->tech) {
 
         case NFC_DIGITAL_RF_14443A: {
-            uint8_t rats[] = { 0xE0, fsd2fsdi(layer->fsd) << 4 };
+
+            int fsd;
+
+            if(driver->dev->ops.ioctl(driver->dev->priv, NFC_DEVICE_IOCR_FRAME_SIZE, &fsd) != 0) {
+                goto error;
+            }
+
+            uint8_t rats[] = { 0xE0, (uint8_t ) (fsd2fsdi(fsd) << 4)  };
             uint8_t ats[7];
 
             struct nfc_tx tx = { .buf = rats, .bits = sizeof(rats)*8, .next = NULL};
