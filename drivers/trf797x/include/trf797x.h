@@ -91,6 +91,14 @@ int trf797x_start(Trf797xDriver *drv, const Trf797xConfig *config);
 void tf797x_interrupt_hookI(Trf797xDriver *driver);
 
 /**
+ * Switch RF on/off
+ * @param driver
+ * @param on
+ * @return
+ */
+int trf797x_switch_rf(Trf797xDriver *driver, bool on);
+
+/**
  * Stop the driver.
  * @param driver
  */

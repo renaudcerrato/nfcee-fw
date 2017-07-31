@@ -1,15 +1,6 @@
 #include "trf797x.h"
 #include "trf797x_lld.h"
 
-#define _rf(drv, on)            do{                                                                             \
-                                    trf797x_register_write1(drv->config->spi, TRF797X_REG_CHIP_STATUS,          \
-                                    ((on) ? TRF797X_CHIP_STATUS_RF_ON : 0) |                                    \
-                                    ((TRF797X_CONF_VIN_5V) ? TRF797X_CHIP_STATUS_VRS5_3 : 0));                  \
-                                }while(0)
-
-#define rf_on(drv)              _rf(drv, TRUE)
-#define rf_off(drv)             _rf(drv, FALSE)
-
 #define read_irq(drv)           trf797x_register_read1(drv->config->spi, TRF797X_REG_IRQ_STATUS)
 
 #define __CLEANUP__(m)          __attribute__ ((__cleanup__(m)))
@@ -53,9 +44,6 @@ int trf797x_initiator_start(Trf797xInitiatorDriver *drv, const Trf797xInitiatorC
     // FIFO levels
     trf797x_register_write1(config->spi, TRF797X_REG_FIFO_IRQ_LEVELS,
                             TRF797X_FIFO_IRQ_LEVELS_WLH_96 | TRF797X_FIFO_IRQ_LEVELS_WLL_32);
-
-    // Power-up the target
-    rf_on(drv);
 
     return 0;
 }
@@ -143,7 +131,7 @@ void trf797x_initiator_stop(Trf797xInitiatorDriver *drv, bool shutdown) {
 
     if(!shutdown) {
         ACQUIRE_FOR_SCOPE(drv->config->spi);
-        rf_off(drv);
+        trf797x_switch_rf((Trf797xDriver *) drv, FALSE);
         drv->state = TRF797X_ST_RF_OFF;
     }
 }

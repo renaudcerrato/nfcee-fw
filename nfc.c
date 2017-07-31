@@ -55,7 +55,8 @@ static THD_FUNCTION(NfcThread, arg) {
 
         if(trf797x_initiator_start(&driver, &config) == 0) {
 
-            // Let target power-up
+            // Power-up target(s)
+            trf797x_switch_rf((Trf797xDriver *) &driver, TRUE);
             chThdSleepMilliseconds(5);
 
             int len = trf797x_initiator_transceive(&driver, &tx, &rx, MS2ST(200));
