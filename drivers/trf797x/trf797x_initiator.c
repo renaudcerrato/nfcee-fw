@@ -4,7 +4,7 @@
 #define _rf(drv, on)            do{                                                                             \
                                     trf797x_register_write1(drv->config->spi, TRF797X_REG_CHIP_STATUS,          \
                                     ((on) ? TRF797X_CHIP_STATUS_RF_ON : 0) |                                    \
-                                    (drv->config->vin == TRF7970X_VIN_5V ? TRF797X_CHIP_STATUS_VRS5_3 : 0));    \
+                                    ((TRF797X_CONF_VIN_5V) ? TRF797X_CHIP_STATUS_VRS5_3 : 0));                  \
                                 }while(0)
 
 #define rf_on(drv)              _rf(drv, TRUE)

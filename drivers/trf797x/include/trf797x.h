@@ -2,6 +2,19 @@
 #define TRF797X_H
 
 #include <hal.h>
+#include "trfconf.h"
+
+#ifndef TRF797X_CONF_27MHZ_OSC
+#error "you must define TRF797X_CONF_27MHZ_OSC"
+#endif
+
+#ifndef TRF797X_CONF_VIN_5V
+#error "you must define TRF797X_CONF_VIN_5V"
+#endif
+
+#ifndef TRF797X_CONF_SYS_CLK_DIV
+#define TRF797X_CONF_SYS_CLK_DIV                0
+#endif
 
 #define EVENT_STOP              (1 << 0)
 #define EVENT_IRQ               (1 << 1)
@@ -22,18 +35,6 @@ enum trf797x_state {
 #define TRF797X_ERR_COLLISION       -1004
 
 
-enum trf797x_sys_clk_divider {
-    TRF7970X_SYS_CLK_DISABLED = 0,
-    TRF7970X_SYS_CLK_DIV1,
-    TRF7970X_SYS_CLK_DIV2,
-    TRF7970X_SYS_CLK_DIV4,
-};
-
-enum trf797x_vin_voltage {
-    TRF7970X_VIN_5V,
-    TRF7970X_VIN_3V,
-};
-
 #define _trf79x_driver_data(CONFIG)                                         \
                 event_source_t      event;                                  \
                 event_listener_t    listener;                               \
@@ -43,9 +44,6 @@ enum trf797x_vin_voltage {
 #define _trf79x_config_data                                                 \
                 SPIDriver                       *spi;                       \
                 eventid_t                       event;                      \
-                bool                            osc27m;                     \
-                enum trf797x_sys_clk_divider    div;                        \
-                enum trf797x_vin_voltage        vin;                        \
                 struct {                                                    \
                     gpio_t     en;                                          \
                     gpio_t     mod;                                         \

@@ -1,6 +1,10 @@
 #ifndef TRF797X_INITIATOR_H
 #define TRF797X_INITIATOR_H
 
+#ifndef TRF797X_H
+#error "you must not include this file directly, include <trf797x.h> instead."
+#endif
+
 #ifndef BIT
 #define BIT(n)                              (1 << (n))
 #endif

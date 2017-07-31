@@ -12,7 +12,7 @@ INCLUDE_DIRECTORIES(
         ${ChibiOS_INCLUDE_DIRS}
         config
         board
-        drivers/trf797x
+        drivers/trf797x/include
         drivers/gpio
         drivers/gpio/stm32/v2/
         libs/trace/

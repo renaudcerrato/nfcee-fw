@@ -2,7 +2,7 @@
 #define TRF797X_LLD_H
 
 #define TRF797X_FIFO_SIZE                  127
-#define TRF797X_SPI_CLK_FREQ_MAX           1000000UL
+#define TRF797X_SPI_CLK_FREQ_MAX           10000000UL
 
 /** TRF797x Registers */
 #define TRF797X_REG_CHIP_STATUS             0x00
@@ -62,6 +62,11 @@
 #define TRF7970X_MODULATOR_CLK(n)               (((n) & 0x3) << 4)
 #define TRF7970X_MODULATOR_EN_OOK               BIT(6)
 #define TRF7970X_MODULATOR_27MHZ                BIT(7)
+
+#define TRF7970X_SYS_CLK_DISABLED               0
+#define TRF7970X_SYS_CLK_DIV1                   1
+#define TRF7970X_SYS_CLK_DIV2                   2
+#define TRF7970X_SYS_CLK_DIV4                   3
 
 
 /* IRQ Status Register Bits */
