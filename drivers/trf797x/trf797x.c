@@ -71,7 +71,7 @@ int trf797x_start(Trf797xDriver *drv, const Trf797xConfig *config) {
 
     const bool found = trf797x_initialize(config);
     if(!found) {
-        return TRF797X_ERR_PROBE;
+        return -ENODEV;
     }
 
     drv->state = TRF797X_ST_IDLE;

@@ -33,14 +33,14 @@ static THD_FUNCTION(NfcThread, arg) {
     uint8_t rxbuf[16];
     bool led = TRUE;
 
-    struct trf797x_tx tx = {
-            .buf = "\x26",    // REQA
+    struct trf797x_iovec tx = {
+            .base = "\x26",    // REQA
             .bits = 7,
     };
 
-    struct trf797x_rx rx = {
-            .buf = rxbuf,
-            .len = sizeof(rxbuf),
+    struct trf797x_iovec rx = {
+            .base = rxbuf,
+            .bytes = sizeof(rxbuf),
     };
 
     chRegSetThreadName("nfc");
@@ -59,7 +59,7 @@ static THD_FUNCTION(NfcThread, arg) {
             trf797x_switch_rf((Trf797xDriver *) &driver, TRUE);
             chThdSleepMilliseconds(5);
 
-            int len = trf797x_initiator_transceive(&driver, &tx, &rx, MS2ST(200));
+            int len = trf797x_initiator_transceive(&driver, &tx, 1, &rx, MS2ST(200));
             if(len > 0) {
                 trace("ATQA = %02X%02X", rxbuf[0], rxbuf[1]);
             }else

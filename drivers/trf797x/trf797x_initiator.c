@@ -16,10 +16,10 @@ static void do_release(SPIDriver **spi) {
 }
 
 static int irq2error(uint8_t irq) {
-    if(irq & TRF7970X_IRQ_STATUS_COL) return TRF797X_ERR_COLLISION;
-    if(irq & TRF7970X_IRQ_STATUS_CRC_ERROR) return TRF797X_ERR_CHECKSUM;
-    if(irq & TRF7970X_IRQ_STATUS_FRAMING_EOF_ERROR) return TRF797X_ERR_FRAMING;
-    if(irq & TRF7970X_IRQ_STATUS_PARITY_ERROR) return TRF797X_ERR_PARITY;
+    if(irq & TRF7970X_IRQ_STATUS_COL) return -TRF797X_ERR_COLLISION;
+    if(irq & TRF7970X_IRQ_STATUS_CRC_ERROR) return -TRF797X_ERR_CHECKSUM;
+    if(irq & TRF7970X_IRQ_STATUS_FRAMING_EOF_ERROR) return -TRF797X_ERR_FRAMING;
+    if(irq & TRF7970X_IRQ_STATUS_PARITY_ERROR) return -TRF797X_ERR_PARITY;
     return 0;
 }
 
@@ -48,17 +48,14 @@ int trf797x_initiator_start(Trf797xInitiatorDriver *drv, const Trf797xInitiatorC
     return 0;
 }
 
-int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf797x_tx *tx, const struct trf797x_rx *rx, systime_t timeout) {
+int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf797x_iovec *tx, size_t txlen, const struct trf797x_iovec *rx, systime_t timeout) {
+
+    if(txlen == 0) return -EINVAL;
 
     ACQUIRE_FOR_SCOPE(drv->config->spi);
 
     eventflags_t flags;
     uint8_t irq;
-
-    const void *tx_buf = tx->buf;
-    void *rx_buf = rx->buf;
-    size_t tx_bytes = (tx->bits + 7) / 8;
-    size_t rx_bytes = rx->len;
 
     // Clear IRQ flags
     read_irq(drv);
@@ -67,25 +64,39 @@ int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf79
     chEvtGetAndClearFlags(&drv->listener);
 
     // Fill FIFO & transmit
-    int len = trf797x_transmit(drv->config->spi, tx_buf, tx->bits, FALSE);
+    int len = trf797x_transmit(drv->config->spi, tx->base, tx->bits, FALSE);
+
+    const void *tx_buf = tx->base;
+    void *rx_buf = rx->base;
+
+    size_t tx_bytes = (tx->bits + 7) / 8;
+    size_t rx_bytes = (rx->bits + 7) / 8;
 
     tx_buf+=len;
     tx_bytes-=len;
+    txlen--;
 
     // Continuous transmit
     do {
         // Wait for IRQ
         if (chEvtWaitAnyTimeout(EVENT_MASK(drv->config->event), TIME_INFINITE) == 0) {
-            return TRF797X_ERR_TIMEOUT;
+            return -ETIMEDOUT;
         }
 
         flags = chEvtGetAndClearFlags(&drv->listener);
-        if (flags & EVENT_STOP) return TRF797X_ERR_CANCELLED;
+        if (flags & EVENT_STOP) return -ECANCELED;
 
         irq = read_irq(drv);
 
         if (irq & TRF7970X_IRQ_STATUS_FIFO) {
-            if (tx_bytes > 0) {
+
+            if (tx_bytes == 0 && txlen) {
+                tx++;
+                tx_buf = tx->base;
+                tx_bytes = (tx->bits + 7) / 8;
+            }
+
+            if(tx_bytes > 0) {
                 len = trf797x_fifo_fill(drv->config->spi, tx_buf, tx_bytes);
                 if(len > 0) {
                     tx_buf+=len;
@@ -100,11 +111,11 @@ int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf79
     do {
         // Wait for IRQ
         if (chEvtWaitAnyTimeout(EVENT_MASK(drv->config->event), timeout) == 0) {
-            return TRF797X_ERR_TIMEOUT;
+            return -ETIMEDOUT;
         }
 
         flags = chEvtGetAndClearFlags(&drv->listener);
-        if (flags & EVENT_STOP) return TRF797X_ERR_CANCELLED;
+        if (flags & EVENT_STOP) return -ECANCELED;
 
         irq = read_irq(drv);
 
@@ -122,7 +133,7 @@ int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf79
 
     }while(irq != TRF7970X_IRQ_STATUS_SRX);
 
-    return (int) (rx_buf - rx->buf);
+    return (int) (rx_buf - rx->base);
 }
 
 void trf797x_initiator_stop(Trf797xInitiatorDriver *drv, bool shutdown) {

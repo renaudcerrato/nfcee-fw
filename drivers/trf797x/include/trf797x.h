@@ -2,6 +2,7 @@
 #define TRF797X_H
 
 #include <hal.h>
+#include <errno.h>
 #include "trfconf.h"
 
 #ifndef TRF797X_CONF_27MHZ_OSC
@@ -26,14 +27,13 @@ enum trf797x_state {
 };
 
 /** Error codes */
-#define TRF797X_ERR_TIMEOUT         -62
-#define TRF797X_ERR_PROBE           -100
-#define TRF797X_ERR_CANCELLED       -200
-#define TRF797X_ERR_CHECKSUM        -1001
-#define TRF797X_ERR_PARITY          -1002
-#define TRF797X_ERR_FRAMING         -1003
-#define TRF797X_ERR_COLLISION       -1004
-
+enum {
+    TRF797X_ERR_BASE = __ELASTERROR,
+    TRF797X_ERR_CHECKSUM,
+    TRF797X_ERR_PARITY,
+    TRF797X_ERR_FRAMING,
+    TRF797X_ERR_COLLISION,
+};
 
 #define _trf79x_driver_data(CONFIG)                                         \
                 event_source_t      event;                                  \
@@ -58,14 +58,24 @@ typedef struct Trf797xDriver {
     _trf79x_driver_data(Trf797xConfig)
 } Trf797xDriver;
 
-struct trf797x_tx {
-    void                *buf;
-    size_t              bits;
-};
-
-struct trf797x_rx {
-    void                *buf;
-    size_t              len;
+struct trf797x_iovec {
+    void                *base;
+    union {
+        uint16_t        bits;
+        struct {
+#ifndef __BYTE_ORDER__
+#error "you must define __BYTE_ORDER__"
+#elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+            uint16_t    :3;
+            uint16_t    bytes:14;
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+            uint16_t    bytes:14;
+            uint16_t    :3;
+#else
+#error "unsupported endian"
+#endif
+        };
+    };
 };
 
 #include "trf797x_initiator.h"
