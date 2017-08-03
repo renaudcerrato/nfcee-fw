@@ -22,27 +22,30 @@ static uint16_t crca(const uint8_t data[], size_t len) {
 }
 
 static int transceive(struct nfc_device *dev, const void *tx, size_t txlen, void *rx, size_t rxlen, unsigned int timeout) {
-    struct nfc_tx nfc_tx = {.buf = tx, .bits = 8*txlen, .next = NULL};
-    struct nfc_rx nfc_rx = {.buf = rx, .len = rxlen};
-    return dev->ops.transceive(dev->priv, &nfc_tx, &nfc_rx, timeout);
+    struct nfc_iovec nfc_tx = {(void *) tx, .bytes = txlen};
+    struct nfc_iovec nfc_rx = {rx, .bytes = rxlen};
+    return dev->ops.transceive(dev->priv, &nfc_tx, 1, &nfc_rx, timeout);
 }
 
 static int transceive_short(struct nfc_device *dev, uint8_t  tx, void *rx, size_t rxlen, unsigned int timeout) {
-    struct nfc_tx nfc_tx = {.buf = &tx, .bits = 7, .next = NULL};
-    struct nfc_rx nfc_rx = {.buf = rx, .len = rxlen};
-    return dev->ops.transceive(dev->priv, &nfc_tx, &nfc_rx, timeout);
+    const struct nfc_iovec nfc_tx = {&tx, .bits = 7};
+    struct nfc_iovec nfc_rx = {rx, .bytes = rxlen};
+    return dev->ops.transceive(dev->priv, &nfc_tx, 1, &nfc_rx, timeout);
 }
 
 int nfc_iso14443a_transceive(nfc_iso14443a_driver_t *driver, const void *tx, size_t txlen, void *rx, size_t rxlen, unsigned int timeout) {
 
-    uint16_t c = crca(tx, txlen);
+    uint16_t c = crca((void *) tx, txlen);
     uint8_t crc[]= {c & 0xff, c >> 8};
 
-    struct nfc_tx nfc_crc = {.buf = crc, .bits = 8*sizeof(crc), .next = NULL};
-    struct nfc_tx nfc_tx = {.buf = tx, .bits = 8*txlen, .next = &nfc_crc};
-    struct nfc_rx nfc_rx = {.buf = rx, .len = rxlen};
+    const struct nfc_iovec nfc_tx[2] = {
+            {(void *) tx, .bytes = txlen },
+            {crc, .bytes = sizeof(crc) },
+    };
 
-    return driver->dev->ops.transceive(driver->dev->priv, &nfc_tx, &nfc_rx, timeout);
+    struct nfc_iovec nfc_rx = {.base = rx, .bytes = rxlen};
+
+    return driver->dev->ops.transceive(driver->dev->priv, nfc_tx, 2, &nfc_rx, timeout);
 }
 
 int nfc_iso14443a_open(nfc_iso14443a_driver_t *driver) {

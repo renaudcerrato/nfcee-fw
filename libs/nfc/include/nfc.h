@@ -12,15 +12,24 @@ typedef enum {
     NFC_DIGITAL_RF_FELICA,
 } nfc_digital_t;
 
-struct nfc_tx {
-    const void          *buf;
-    size_t              bits;
-    struct nfc_tx       *next;
-};
-
-struct nfc_rx {
-    void                *buf;
-    size_t              len;
+struct nfc_iovec {
+    void                *base;
+    union {
+        uint32_t        bits;
+        struct {
+#ifndef __BYTE_ORDER__
+#error "you must define __BYTE_ORDER__"
+#elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+            uint32_t    :3;
+            uint32_t    bytes:29;
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+            uint32_t    bytes:29;
+            uint32_t    :3;
+#else
+#error "unsupported endian"
+#endif
+        };
+    };
 };
 
 typedef enum {
@@ -30,7 +39,7 @@ typedef enum {
 
 struct nfc_device_fops {
     int (*open)(void *, nfc_digital_t tech);
-    int (*transceive)(void *, const struct nfc_tx *tx, const struct nfc_rx *rx, unsigned int timeout);
+    int (*transceive)(void *, const struct nfc_iovec *tx, size_t len, struct nfc_iovec *rx, unsigned int timeout);
     int (*ioctl)(void *, nfc_iocreq_t, void *);
     int (*close)(void *);
 };
