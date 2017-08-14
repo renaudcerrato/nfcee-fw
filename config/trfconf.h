@@ -22,4 +22,9 @@
  */
 #define TRF797X_CONF_VIN_5V             1
 
+/**
+ * @brief enable libnfc parts
+ */
+#define TRF797X_CONF_HAVE_LIBNFC        1
+
 #endif // TRFCONF_H

@@ -61,16 +61,16 @@ typedef struct Trf797xDriver {
 struct trf797x_iovec {
     void                *base;
     union {
-        uint16_t        bits;
+        uint32_t        bits;
         struct {
 #ifndef __BYTE_ORDER__
 #error "you must define __BYTE_ORDER__"
 #elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-            uint16_t    :3;
-            uint16_t    bytes:14;
+            uint32_t    :3;
+            uint32_t    bytes:29;
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-            uint16_t    bytes:14;
-            uint16_t    :3;
+            uint32_t    bytes:29;
+            uint32_t    :3;
 #else
 #error "unsupported endian"
 #endif
@@ -80,38 +80,10 @@ struct trf797x_iovec {
 
 #include "trf797x_initiator.h"
 
-/**
- * Initialize the driver object.
- * @param driver
- */
 void trf797x_driver_init(Trf797xDriver *driver);
-
-/**
- * Configure and start the driver.
- * @param drv
- * @param config
- * @return zero on success, < 0 otherwise.
- */
 int trf797x_start(Trf797xDriver *drv, const Trf797xConfig *config);
-
-/**
- * Interrupt hook.
- * @param driver
- */
 void tf797x_interrupt_hookI(Trf797xDriver *driver);
-
-/**
- * Switch RF on/off
- * @param driver
- * @param on
- * @return
- */
 int trf797x_switch_rf(Trf797xDriver *driver, bool on);
-
-/**
- * Stop the driver.
- * @param driver
- */
 void trf797x_stop(Trf797xDriver *driver, bool shutdown);
 
 

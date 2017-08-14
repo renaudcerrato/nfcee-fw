@@ -136,7 +136,7 @@ int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf79
     return (int) (rx_buf - rx->base);
 }
 
-void trf797x_initiator_stop(Trf797xInitiatorDriver *drv, bool shutdown) {
+int trf797x_initiator_stop(Trf797xInitiatorDriver *drv, bool shutdown) {
 
     trf797x_stop((Trf797xDriver *) drv, shutdown);
 
@@ -145,4 +145,6 @@ void trf797x_initiator_stop(Trf797xInitiatorDriver *drv, bool shutdown) {
         trf797x_switch_rf((Trf797xDriver *) drv, FALSE);
         drv->state = TRF797X_ST_RF_OFF;
     }
+
+    return 0;
 }

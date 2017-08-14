@@ -39,34 +39,22 @@ typedef struct Trf797xInitiatorDriver {
     _trf79x_driver_data(Trf797xInitiatorConfig)
 } Trf797xInitiatorDriver;
 
-/**
- * Initialize the driver structure.
- * @param driver
- */
+
 void trf797x_initiator_driver_init(Trf797xInitiatorDriver *driver);
-
-/**
- * Start the driver.
- * @param driver
- * @param config
- */
 int trf797x_initiator_start(Trf797xInitiatorDriver *driver, const Trf797xInitiatorConfig *config);
-
-
-/**
- * Transceive data to/from the device.
- * @param driver
- * @param tx
- * @param rx
- * @return the # of bytes received in rx->buf, or < 0 on error.
- */
 int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf797x_iovec *tx, size_t len, const struct trf797x_iovec *rx, systime_t timeout);
+int trf797x_initiator_stop(Trf797xInitiatorDriver *driver, bool shutdown);
 
-/**
- * Stop the driver.
- * @param driver
- * @param shutdown
- */
-void trf797x_initiator_stop(Trf797xInitiatorDriver *driver, bool shutdown);
+#if TRF797X_CONF_HAVE_LIBNFC
+#include <nfc.h>
+
+struct trf797x_nfc_device {
+    _nfc_device_data
+    Trf797xInitiatorDriver  driver;
+    Trf797xInitiatorConfig  config;
+};
+
+void trf797x_nfc_device_init(struct trf797x_nfc_device *device);
+#endif
 
 #endif //TRF797X_INITIATOR_H
