@@ -21,6 +21,15 @@ int nfc_transceive(nfc_driver_t *driver, const void *tx, size_t txlen, void *rx,
     }
 }
 
+int nfc_ioctl(nfc_driver_t *driver, nfc_iocreq_t req, void *arg) {
+    switch(driver->tech) {
+        case NFC_DIGITAL_RF_14443A:
+        case NFC_DIGITAL_RF_14443B:
+            return nfc_iso14443_ioctl((nfc_iso14443_driver_t *) driver, req, arg);
+        default:
+            return -EINVAL;
+    }
+}
 int nfc_close(nfc_driver_t *driver) {
     switch(driver->tech) {
         case NFC_DIGITAL_RF_14443A:

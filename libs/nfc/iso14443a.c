@@ -24,13 +24,13 @@ static uint16_t crca(const uint8_t data[], size_t len) {
 static int transceive(struct nfc_device *dev, const void *tx, size_t txlen, void *rx, size_t rxlen, unsigned int timeout) {
     struct nfc_iovec nfc_tx = {(void *) tx, .bytes = txlen};
     struct nfc_iovec nfc_rx = {rx, .bytes = rxlen};
-    return dev->ops.transceive(dev->priv, &nfc_tx, 1, &nfc_rx, timeout);
+    return dev->transceive(dev, &nfc_tx, 1, &nfc_rx, timeout);
 }
 
 static int transceive_short(struct nfc_device *dev, uint8_t  tx, void *rx, size_t rxlen, unsigned int timeout) {
     const struct nfc_iovec nfc_tx = {&tx, .bits = 7};
     struct nfc_iovec nfc_rx = {rx, .bytes = rxlen};
-    return dev->ops.transceive(dev->priv, &nfc_tx, 1, &nfc_rx, timeout);
+    return dev->transceive(dev, &nfc_tx, 1, &nfc_rx, timeout);
 }
 
 int nfc_iso14443a_transceive(nfc_iso14443a_driver_t *driver, const void *tx, size_t txlen, void *rx, size_t rxlen, unsigned int timeout) {
@@ -45,7 +45,7 @@ int nfc_iso14443a_transceive(nfc_iso14443a_driver_t *driver, const void *tx, siz
 
     struct nfc_iovec nfc_rx = {.base = rx, .bytes = rxlen};
 
-    return driver->dev->ops.transceive(driver->dev->priv, nfc_tx, 2, &nfc_rx, timeout);
+    return driver->dev->transceive(driver->dev, nfc_tx, 2, &nfc_rx, timeout);
 }
 
 int nfc_iso14443a_open(nfc_iso14443a_driver_t *driver) {
@@ -138,6 +138,28 @@ int nfc_iso14443a_open(nfc_iso14443a_driver_t *driver) {
     }
 
     driver->sak = buf[0];
+
+    // T=CL compliant?
+    if((driver->sak & 0x24) == 0x20) {
+        uint8_t rats[] = {0xE0, fsd2fsdi(driver->fsd) << 4};
+        int fwi = 8;
+
+        // Send RATS
+        if ((ret = nfc_iso14443a_transceive(driver, rats, sizeof(rats), driver->ats, sizeof(driver->ats), DEFAULT_TIMEOUT)) < 0) {
+            goto err;
+        }
+
+        if (driver->ats[0] > 1) {
+            driver->fsc = fsci2fsc(driver->ats[1] & 0x0F);
+
+            if (driver->ats[1] & 0x20) {
+                fwi = driver->ats[(driver->ats[1] & 0x10) ? 3 : 2] >> 4;
+            }
+        }
+
+        driver->fwt = fwi2fw(fwi);
+    }
+
     return 0;
 err:
     return ret;

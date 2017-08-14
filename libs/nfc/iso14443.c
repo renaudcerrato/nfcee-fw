@@ -1,6 +1,7 @@
 #include <nfc.h>
 #include <errno.h>
 #include <string.h>
+#include <unistd.h>
 
 int nfc_iso14443a_open(nfc_iso14443a_driver_t *driver);
 int nfc_iso14443a_transceive(nfc_iso14443a_driver_t *driver, const void *tx, size_t txlen, void *rx, size_t rxlen, unsigned int timeout);
@@ -25,12 +26,12 @@ int nfc_iso14443a_close(nfc_iso14443a_driver_t *driver);
 #define MAX(a,b)            ((b) < (a) ? (a) : (b))
 #endif
 
-static size_t fsci2fsc(uint8_t fsci) {
+size_t fsci2fsc(uint8_t fsci) {
     const uint16_t lut[] = { 16, 24, 32, 40, 48, 64, 96, 128, 256};
     return lut[MIN(fsci, sizeof(lut)/sizeof(lut[0]) - 1)];
 }
 
-static uint8_t fsd2fsdi(int fsd) {
+uint8_t fsd2fsdi(int fsd) {
     static const uint16_t lut[] = { 16, 24, 32, 40, 48, 64, 96, 128, 256};
     static const int size = sizeof(lut)/sizeof(lut[0]);
 
@@ -43,7 +44,7 @@ static uint8_t fsd2fsdi(int fsd) {
     return 0;
 }
 
-static size_t fwi2fw(uint8_t fwi) {
+size_t fwi2fw(uint8_t fwi) {
     const uint16_t lut[] = { 1, 1, 2, 3, 5, 10, 20, 40, 80, 160, 310, 620, 1240, 2480, 4950};
     return lut[MIN(fwi, sizeof(lut)/sizeof(lut[0]) - 1)];
 }
@@ -59,67 +60,37 @@ static bool is_tcl(nfc_iso14443_driver_t *driver) {
     }
 }
 
-void nfc_iso14443a_driver_init(nfc_iso14443a_driver_t *driver, struct nfc_device *dev) {
+nfc_driver_t * nfc_iso14443a_driver_init(nfc_iso14443a_driver_t *driver, struct nfc_device *dev) {
     driver->dev = dev;
+    driver->state = ISO14443_STATE_POWER_OFF;
     driver->tech = NFC_DIGITAL_RF_14443A;
     driver->l3.open = (typeof(driver->l3.open)) nfc_iso14443a_open;
     driver->l3.transceive = (typeof(driver->l3.transceive)) nfc_iso14443a_transceive;
     driver->l3.close = (typeof(driver->l3.close)) nfc_iso14443a_close;
+    return (nfc_driver_t *) driver;
 }
 
 int nfc_iso14443_open(nfc_iso14443_driver_t *driver) {
 
-    int fwi = 8;
-    int ret = driver->l3.open(driver);
+    int ret = 0;
 
-    if(ret < 0 || !is_tcl(driver)) {
-        return ret;
+    if(driver->state == ISO14443_STATE_POWER_OFF) {
+        ret = driver->dev->ioctl(driver->dev, NFC_IOCW_SWITCH_RF, (void *) 1);
+        if(ret != 0) goto exit;
+        usleep(6000L);
+        driver->state = ISO14443_STATE_IDLE;
     }
 
-    switch(driver->tech) {
-
-        case NFC_DIGITAL_RF_14443A: {
-
-            if(driver->dev->ops.ioctl(driver->dev->priv, NFC_IOCR_DEV_FRAME_SIZE, &driver->fsd) != 0) {
-                goto error;
-            }
-
-            uint8_t rats[] = { 0xE0, fsd2fsdi(driver->fsd) << 4 };
-            uint8_t ats[7];
-
-            // Send RATS
-            if(driver->l3.transceive(driver, rats, sizeof(rats), ats, sizeof(ats), 100) < 0) {
-                goto error;
-            }
-
-            if(ats[0] > 1) {
-                driver->fsc = fsci2fsc(ats[1] & 0x0F);
-
-                if(ats[1] & 0x20) {
-                    fwi = ats[(ats[1] & 0x10) ? 3 : 2] >> 4;
-                }
-            }
-        }
-            break;
-
-        case NFC_DIGITAL_RF_14443B: {
-            uint8_t *atqb = ((nfc_iso14443b_driver_t *)driver)->atqb;
-            driver->fsc = fsci2fsc(atqb[10] >> 4);
-            fwi = atqb[11] >> 4;
-        }
-            break;
-
-        default:
-            goto error;
+    if(driver->state == ISO14443_STATE_IDLE || driver->state == ISO14443_STATE_HALTED) {
+        driver->dev->ioctl(driver->dev, NFC_IOCR_DEV_FRAME_SIZE, &driver->fsd);
+        ret = driver->l3.open(driver);
+        if(ret != 0) goto exit;
+        driver->state = ISO14443_STATE_SELECTED;
     }
 
-    driver->fwt = MAX(100, fwi2fw(fwi));
     driver->block = 0;
-
-    return 0;
-error:
-    driver->l3.close(driver);
-    return -EIO;
+exit:
+    return ret;
 }
 
 int nfc_iso14443_transceive(nfc_iso14443_driver_t *driver, const void *txdata, size_t txlen, void *rxdata, size_t rxlen, unsigned int timeout) {
@@ -142,8 +113,7 @@ int nfc_iso14443_transceive(nfc_iso14443_driver_t *driver, const void *txdata, s
         /* Push (FSC - 3) bytes of data (no NAD, no CID)*/
         memcpy(buffer + 1, txdata, inf_size);
 
-        do
-        {
+        do {
             if(driver->l3.transceive(driver, buffer, inf_size + 1, buffer, 3, driver->fwt) < 3)
                 goto error;
 
@@ -244,16 +214,39 @@ int nfc_iso14443_transceive(nfc_iso14443_driver_t *driver, const void *txdata, s
 
     return received;
 error:
-    nfc_iso14443_close(driver);
     return -EIO;
+}
+
+int nfc_iso14443_ioctl(nfc_iso14443_driver_t *driver, nfc_iocreq_t req, void *arg) {
+
+    int ret = driver->dev->ioctl(driver->dev, req, arg);
+
+    if(req == NFC_IOCW_SWITCH_RF && !(int) arg) {
+        driver->state = ISO14443_STATE_POWER_OFF;
+    }
+
+    return ret;
 }
 
 int nfc_iso14443_close(nfc_iso14443_driver_t *driver) {
 
-    if(is_tcl(driver)) {
-        uint8_t deselect = 0xC2;
-        driver->l3.transceive(driver, &deselect, 1, NULL, 0, 0);
+    int ret;
+
+    if(driver->state != ISO14443_STATE_SELECTED) {
+        return 0;
     }
 
-    return driver->l3.close(driver);
+    if (is_tcl(driver)) {
+        uint8_t deselect = 0xC2, answer;
+
+        if((ret = driver->l3.transceive(driver, &deselect, 1, &answer, 1, 5)) == 1) {
+            ret = answer == deselect ? 0 : -EIO;
+        }
+    } else {
+        ret = driver->l3.close(driver);
+    }
+
+    driver->state = ISO14443_STATE_HALTED;
+
+    return ret;
 }
