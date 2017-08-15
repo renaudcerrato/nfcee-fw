@@ -72,24 +72,39 @@ nfc_driver_t * nfc_iso14443a_driver_init(nfc_iso14443a_driver_t *driver, struct 
 
 int nfc_iso14443_open(nfc_iso14443_driver_t *driver) {
 
-    int ret = 0;
+    int ret;
 
     if(driver->state == ISO14443_STATE_POWER_OFF) {
-        ret = driver->dev->ioctl(driver->dev, NFC_IOCW_SWITCH_RF, (void *) 1);
-        if(ret != 0) goto exit;
+
+        if((ret = driver->dev->open(driver->dev, driver->tech)) != 0) {
+            return ret;
+        }
+
+        // Turn RF on
+        if((ret = driver->dev->ioctl(driver->dev, NFC_IOCW_SWITCH_RF, (void *) 1)) != 0) {
+            goto error;
+        }
+
+        driver->dev->ioctl(driver->dev, NFC_IOCR_DEV_FRAME_SIZE, &driver->fsd);
+
         usleep(6000L);
         driver->state = ISO14443_STATE_IDLE;
     }
 
     if(driver->state == ISO14443_STATE_IDLE || driver->state == ISO14443_STATE_HALTED) {
-        driver->dev->ioctl(driver->dev, NFC_IOCR_DEV_FRAME_SIZE, &driver->fsd);
-        ret = driver->l3.open(driver);
-        if(ret != 0) goto exit;
+
+        if((ret = driver->l3.open(driver)) != 0) {
+            goto error;
+        }
+
         driver->state = ISO14443_STATE_SELECTED;
+        driver->block = 0;
     }
 
-    driver->block = 0;
-exit:
+    return 0;
+error:
+    driver->dev->close(driver->dev);
+    driver->state = ISO14443_STATE_POWER_OFF;
     return ret;
 }
 
@@ -102,30 +117,30 @@ int nfc_iso14443_transceive(nfc_iso14443_driver_t *driver, const void *txdata, s
     uint8_t buffer[MAX_FRAME_SIZE];
     size_t inf_size, received;
 
-    /* INF field maximum size (no NAD, no CID) */
+    // INF field maximum size (no NAD, no CID)
     inf_size = MIN(driver->fsd, MIN(driver->fsc, sizeof buffer)) - 3;
 
     while(txlen > inf_size) {
 
-        /* I-Block : chaining */
+        // I-Block : chaining
         buffer[0] = 0x12 | togglebit(driver->block);
 
-        /* Push (FSC - 3) bytes of data (no NAD, no CID)*/
+        // Push (FSC - 3) bytes of data (no NAD, no CID)
         memcpy(buffer + 1, txdata, inf_size);
 
         do {
             if(driver->l3.transceive(driver, buffer, inf_size + 1, buffer, 3, driver->fwt) < 3)
                 goto error;
 
-            /* I-Blocks are not allowed during chaining */
+            // I-Blocks are not allowed during chaining
             if(is_iblock(buffer[0])) {
                 goto error;
             }
 
-            /* More time requested ? (Rule 9) */
+            // More time requested ? (Rule 9)
             while(is_wtx(buffer[0]))
             {
-                /* Rule 3 */
+                // Rule 3
                 buffer[1] &= 0x3F;
 
                 if(driver->l3.transceive(driver, buffer, 2, buffer, 3, driver->fwt * buffer[1]) < 3) {
@@ -137,17 +152,16 @@ int nfc_iso14443_transceive(nfc_iso14443_driver_t *driver, const void *txdata, s
                 goto error;
             }
 
-            /* Rule 6/7 */
-        }while(togglebit(buffer[0]) != togglebit(driver->block));
+        }while(togglebit(buffer[0]) != togglebit(driver->block)); // Rule 6/7
 
         txdata+=inf_size;
         txlen-=inf_size;
 
-        /* Rule B */
+        // Rule B
         driver->block++;
     }
 
-    /* Send last block and retrieve answer */
+    // Send last block and retrieve answer
     buffer[0] = 0x02;
     memcpy(buffer + 1, txdata, txlen);
 
@@ -162,10 +176,10 @@ int nfc_iso14443_transceive(nfc_iso14443_driver_t *driver, const void *txdata, s
             goto error;
         }
 
-        /* More time requested ? (Rule 9) */
-        while(is_wtx(buffer[0]))
-        {
-            /* Rule 3 */
+        // More time requested ? (Rule 9)
+        while(is_wtx(buffer[0])) {
+
+            // Rule 3
             buffer[1] &= 0x3F;
 
             if((i = driver->l3.transceive(driver, buffer, 2, buffer, sizeof buffer, driver->fwt * buffer[1])) < 3) {
@@ -179,16 +193,16 @@ int nfc_iso14443_transceive(nfc_iso14443_driver_t *driver, const void *txdata, s
 
         size_of_header = 1;
 
-        /* CID present ? */
+        // CID present ?
         if(buffer[0] & 0x08)
             size_of_header++;
 
-        /* NAD present ? */
+        // NAD present ?
         if(buffer[0] & 0x04) {
             size_of_header++;
         }
 
-        /* Read data from FIFO */
+        // Read data from FIFO
         if(togglebit(buffer[0]) == togglebit(driver->block))
         {
             inf_size = MIN(i - size_of_header - 2, rxlen);
@@ -198,15 +212,15 @@ int nfc_iso14443_transceive(nfc_iso14443_driver_t *driver, const void *txdata, s
             received+=inf_size;
         }
 
-        /* Rule B */
+        // Rule B
         driver->block++;
 
-        /* Chaining used ? */
+        // Chaining used ?
         if(!(buffer[0] & 0x10)) {
             break;
         }
 
-        /* Prepare ACK */
+        // Prepare ACK
         buffer[0] = 0xA2;
         txlen = 0;
 
@@ -228,25 +242,30 @@ int nfc_iso14443_ioctl(nfc_iso14443_driver_t *driver, nfc_iocreq_t req, void *ar
     return ret;
 }
 
+/**
+ * TODO: support multiple PICC in field.
+ * Since driver->dev->close() shutdown the RF (as of now),
+ * there's no point to send a DESELECT.
+ */
 int nfc_iso14443_close(nfc_iso14443_driver_t *driver) {
 
-    int ret;
+#if 0
+    int ret = 0;
 
-    if(driver->state != ISO14443_STATE_SELECTED) {
-        return 0;
-    }
+    if(driver->state == ISO14443_STATE_SELECTED) {
 
-    if (is_tcl(driver)) {
-        uint8_t deselect = 0xC2, answer;
+        if (is_tcl(driver)) {
+            uint8_t deselect = 0xC2, answer;
 
-        if((ret = driver->l3.transceive(driver, &deselect, 1, &answer, 1, 5)) == 1) {
-            ret = answer == deselect ? 0 : -EIO;
+            if ((ret = driver->l3.transceive(driver, &deselect, 1, &answer, 1, 5)) == 1) {
+                ret = answer == deselect ? 0 : -EIO;
+            }
+        } else {
+            ret = driver->l3.close(driver);
         }
-    } else {
-        ret = driver->l3.close(driver);
     }
+#endif
 
-    driver->state = ISO14443_STATE_HALTED;
-
-    return ret;
+    driver->state = ISO14443_STATE_POWER_OFF;
+    return driver->dev->close(driver->dev);
 }
