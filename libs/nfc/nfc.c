@@ -30,6 +30,7 @@ int nfc_ioctl(nfc_driver_t *driver, nfc_iocreq_t req, void *arg) {
             return -EINVAL;
     }
 }
+
 int nfc_close(nfc_driver_t *driver) {
     switch(driver->tech) {
         case NFC_DIGITAL_RF_14443A:
