@@ -26,7 +26,7 @@ struct nfc_iovec {
             uint32_t    bytes:29;
             uint32_t    :3;
 #else
-#error "unsupported endian"
+#error "unsupported endianness"
 #endif
         };
     };
@@ -37,10 +37,10 @@ typedef enum {
     NFC_IOCR_DEV_FRAME_SIZE,
 } nfc_iocreq_t;
 
-#define _nfc_device_data            int (*open)(void *, nfc_digital_t tech);            \
-                                    int (*transceive)(void *, const struct nfc_iovec *tx, size_t len, struct nfc_iovec *rx, unsigned int timeout);  \
-                                    int (*ioctl)(void *, nfc_iocreq_t, void *);         \
-                                    int (*close)(void *);
+#define _nfc_device_data            int (*open)(struct nfc_device *, nfc_digital_t tech);            \
+                                    int (*transceive)(struct nfc_device *, const struct nfc_iovec *tx, size_t len, struct nfc_iovec *rx, unsigned int timeout);  \
+                                    int (*ioctl)(struct nfc_device *, nfc_iocreq_t, void *);         \
+                                    int (*close)(struct nfc_device *);
 
 struct nfc_device {
     _nfc_device_data
