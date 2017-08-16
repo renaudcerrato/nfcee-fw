@@ -1,6 +1,10 @@
 #ifndef TRF797X_INITIATOR_H
 #define TRF797X_INITIATOR_H
 
+#ifndef TRF797X_H
+#error "you must not include this file directly, include <trf797x.h> instead."
+#endif
+
 #ifndef BIT
 #define BIT(n)                              (1 << (n))
 #endif
@@ -35,51 +39,22 @@ typedef struct Trf797xInitiatorDriver {
     _trf79x_driver_data(Trf797xInitiatorConfig)
 } Trf797xInitiatorDriver;
 
-#define TRF797X_FLAG_TX_SDM                 BIT(0)  /**< use special direct mode for emission (raw mode) */
 
-#define TRF797X_FLAG_RX_DM1                 BIT(0)  /**< use direct mode 1 for reception (raw mode) */
-#define TRF797X_FLAG_RX_LSB_FIRST           BIT(1)  /**< valid only if TRF797X_FLAG_RX_DM1 is set */
-#define TRF797X_FLAG_RX_IGNORE_PARITY_ERROR BIT(2)  /**< disable parity checks (ISO14443A) */
+void trf797x_initiator_driver_init(Trf797xInitiatorDriver *driver);
+int trf797x_initiator_start(Trf797xInitiatorDriver *driver, const Trf797xInitiatorConfig *config);
+int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf797x_iovec *tx, size_t len, const struct trf797x_iovec *rx, systime_t timeout);
+int trf797x_initiator_stop(Trf797xInitiatorDriver *driver, bool shutdown);
 
-struct trf797x_transfer {
-    void            *txbuf;
-    size_t          txbits;
-    int             txflags;
+#if TRF797X_CONF_HAVE_LIBNFC
+#include <nfc.h>
 
-    void            *rxbuf;
-    size_t          rxbits;
-    int             rxflags;
-
-    systime_t       timeout;
+struct trf797x_nfc_device {
+    _nfc_device_data
+    Trf797xInitiatorDriver  driver;
+    Trf797xInitiatorConfig  config;
 };
 
-/**
- * Initialize the driver structure.
- * @param driver
- */
-void trf797x_initiator_driver_init(Trf797xInitiatorDriver *driver);
-
-/**
- * Start the driver.
- * @param driver
- * @param config
- */
-int trf797x_initiator_start(Trf797xInitiatorDriver *driver, const Trf797xInitiatorConfig *config);
-
-
-/**
- * Transceive data to/from the device.
- * @param driver
- * @param tr
- * @return the # of bytes received in tr->rxbuf, or < 0 on error.
- */
-int trf797x_initiator_transceive(Trf797xInitiatorDriver *driver, const struct trf797x_transfer *tr);
-
-/**
- * Stop the driver.
- * @param driver
- * @param shutdown
- */
-void trf797x_initiator_stop(Trf797xInitiatorDriver *driver, bool shutdown);
+void trf797x_nfc_device_init(struct trf797x_nfc_device *device);
+#endif
 
 #endif //TRF797X_INITIATOR_H

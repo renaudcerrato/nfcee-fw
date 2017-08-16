@@ -1,5 +1,5 @@
 #include <hal.h>
-#include "trf797x_lld.h"
+#include "trf797x.h"
 
 #define CONFIGURE_PAD(NAME)    gpioSetPadMode(NAME, NAME ## _MODE)
 
@@ -11,24 +11,24 @@ static const SPIConfig trf797x_spicfg = {
         GPIO_PORT(GPIO_IO4),
         GPIO_PAD(GPIO_IO4),
         SPI_CR1_CPHA |
-#if (STM32_PCLK1 / 2) <= TRF797X_SPI_CLK_FREQ_MAX
+#if (STM32_PCLK1 / 2) <= TRF797X_CONF_SPI_CLOCK
         0
-#elif (STM32_PCLK1 / 4) <= TRF797X_SPI_CLK_FREQ_MAX
+#elif (STM32_PCLK1 / 4) <= TRF797X_CONF_SPI_CLOCK
         SPI_CR1_BR_0
-#elif (STM32_PCLK1 / 8) <= TRF797X_SPI_CLK_FREQ_MAX
+#elif (STM32_PCLK1 / 8) <= TRF797X_CONF_SPI_CLOCK
         SPI_CR1_BR_1
-#elif (STM32_PCLK1 / 16) <= TRF797X_SPI_CLK_FREQ_MAX
+#elif (STM32_PCLK1 / 16) <= TRF797X_CONF_SPI_CLOCK
         SPI_CR1_BR_1 | SPI_CR1_BR_0
-#elif (STM32_PCLK1 / 32) <= TRF797X_SPI_CLK_FREQ_MAX
+#elif (STM32_PCLK1 / 32) <= TRF797X_CONF_SPI_CLOCK
         SPI_CR1_BR_2
-#elif (STM32_PCLK1 / 64) <= TRF797X_SPI_CLK_FREQ_MAX
+#elif (STM32_PCLK1 / 64) <= TRF797X_CONF_SPI_CLOCK
         SPI_CR1_BR_2 | SPI_CR1_BR_0
-#elif (STM32_PCLK1 / 128) <= TRF797X_SPI_CLK_FREQ_MAX
+#elif (STM32_PCLK1 / 128) <= TRF797X_CONF_SPI_CLOCK
         SPI_CR1_BR_2 | SPI_CR1_BR_1
-#elif (STM32_PCLK1 / 256) <= TRF797X_SPI_CLK_FREQ_MAX
+#elif (STM32_PCLK1 / 256) <= TRF797X_CONF_SPI_CLOCK
         SPI_CR1_BR_2 | SPI_CR1_BR_1 | SPI_CR1_BR_0
 #else
-        #error "unable to compute SPI baudrate for given TRF797X_SPI_CLK_FREQ_MAX"
+    #error "unable to compute SPI baudrate for given TRF797X_CONF_SPI_CLOCK"
 #endif
 };
 

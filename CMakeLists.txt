@@ -12,10 +12,11 @@ INCLUDE_DIRECTORIES(
         ${ChibiOS_INCLUDE_DIRS}
         config
         board
-        drivers/trf797x
+        drivers/trf797x/include
         drivers/gpio
         drivers/gpio/stm32/v2/
         libs/trace/
+        libs/nfc/include/
 )
 
 SET(SOURCE_FILES
@@ -27,12 +28,21 @@ SET(SOURCE_FILES
         drivers/trf797x/trf797x_lld.c
         drivers/trf797x/trf797x.c
         drivers/trf797x/trf797x_initiator.c
-        libs/trace/trace.c)
+        drivers/trf797x/trf797x_device.c
+        libs/trace/trace.c
+        libs/nfc/nfc.c
+        libs/nfc/iso14443.c
+        libs/nfc/iso14443a.c
+
+        libs/newlib/usleep.c)
 
 ADD_DEFINITIONS(-DCORTEX_USE_FPU=TRUE)
 ADD_DEFINITIONS(-DUSB_CDC_TRACE)
 
 SET(STM32_LINKER_SCRIPT ${ChibiOS_LINKER_SCRIPT})
+
+SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0")
+SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -O0")
 
 ###
 #    TARGET

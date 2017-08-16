@@ -2,7 +2,7 @@
 #define TRF797X_LLD_H
 
 #define TRF797X_FIFO_SIZE                  127
-#define TRF797X_SPI_CLK_FREQ_MAX           1000000UL
+#define TRF797X_SPI_CLK_FREQ_MAX           10000000UL
 
 /** TRF797x Registers */
 #define TRF797X_REG_CHIP_STATUS             0x00
@@ -62,6 +62,11 @@
 #define TRF7970X_MODULATOR_CLK(n)               (((n) & 0x3) << 4)
 #define TRF7970X_MODULATOR_EN_OOK               BIT(6)
 #define TRF7970X_MODULATOR_27MHZ                BIT(7)
+
+#define TRF7970X_SYS_CLK_DISABLED               0
+#define TRF7970X_SYS_CLK_DIV1                   1
+#define TRF7970X_SYS_CLK_DIV2                   2
+#define TRF7970X_SYS_CLK_DIV4                   3
 
 
 /* IRQ Status Register Bits */
@@ -130,7 +135,7 @@ void trf797x_command(SPIDriver *spi, trf797x_cmd_t cmd);
 size_t trf797x_register_read(SPIDriver *spi, trf797x_reg_t adr, void *data, size_t len);
 void trf797x_register_write(SPIDriver *spi, trf797x_reg_t adr, const void *data, size_t len);
 
-int trf797x_transmit(SPIDriver *spi, const void *data, size_t bits, bool crc);
+size_t trf797x_transmit(SPIDriver *spi, const struct trf797x_iovec **tx, size_t *len, bool crc);
 int trf797x_fifo_fill(SPIDriver *spi, const void *data, size_t len);
 int trf797x_fifo_drain(SPIDriver *spi, void *data, size_t len);
 

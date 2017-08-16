@@ -2,6 +2,20 @@
 #define TRF797X_H
 
 #include <hal.h>
+#include <errno.h>
+#include "trfconf.h"
+
+#ifndef TRF797X_CONF_27MHZ_OSC
+#error "you must define TRF797X_CONF_27MHZ_OSC"
+#endif
+
+#ifndef TRF797X_CONF_VIN_5V
+#error "you must define TRF797X_CONF_VIN_5V"
+#endif
+
+#ifndef TRF797X_CONF_SYS_CLK_DIV
+#define TRF797X_CONF_SYS_CLK_DIV                0
+#endif
 
 #define EVENT_STOP              (1 << 0)
 #define EVENT_IRQ               (1 << 1)
@@ -13,25 +27,12 @@ enum trf797x_state {
 };
 
 /** Error codes */
-#define TRF797X_ERR_TIMEOUT         -62
-#define TRF797X_ERR_PROBE           -100
-#define TRF797X_ERR_CANCELLED       -200
-#define TRF797X_ERR_CHECKSUM        -1001
-#define TRF797X_ERR_PARITY          -1002
-#define TRF797X_ERR_FRAMING         -1003
-#define TRF797X_ERR_COLLISION       -1004
-
-
-enum trf797x_sys_clk_divider {
-    TRF7970X_SYS_CLK_DISABLED = 0,
-    TRF7970X_SYS_CLK_DIV1,
-    TRF7970X_SYS_CLK_DIV2,
-    TRF7970X_SYS_CLK_DIV4,
-};
-
-enum trf797x_vin_voltage {
-    TRF7970X_VIN_5V,
-    TRF7970X_VIN_3V,
+enum {
+    TRF797X_ERR_BASE = __ELASTERROR,
+    TRF797X_ERR_CHECKSUM,
+    TRF797X_ERR_PARITY,
+    TRF797X_ERR_FRAMING,
+    TRF797X_ERR_COLLISION,
 };
 
 #define _trf79x_driver_data(CONFIG)                                         \
@@ -43,9 +44,6 @@ enum trf797x_vin_voltage {
 #define _trf79x_config_data                                                 \
                 SPIDriver                       *spi;                       \
                 eventid_t                       event;                      \
-                bool                            osc27m;                     \
-                enum trf797x_sys_clk_divider    div;                        \
-                enum trf797x_vin_voltage        vin;                        \
                 struct {                                                    \
                     gpio_t     en;                                          \
                     gpio_t     mod;                                         \
@@ -60,33 +58,32 @@ typedef struct Trf797xDriver {
     _trf79x_driver_data(Trf797xConfig)
 } Trf797xDriver;
 
+struct trf797x_iovec {
+    void                *base;
+    union {
+        uint32_t        bits;
+        struct {
+#ifndef __BYTE_ORDER__
+#error "you must define __BYTE_ORDER__"
+#elif __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+            uint32_t    :3;
+            uint32_t    bytes:29;
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+            uint32_t    bytes:29;
+            uint32_t    :3;
+#else
+#error "unsupported endian"
+#endif
+        };
+    };
+};
 
 #include "trf797x_initiator.h"
 
-/**
- * Initialize the driver object.
- * @param driver
- */
 void trf797x_driver_init(Trf797xDriver *driver);
-
-/**
- * Configure and start the driver.
- * @param drv
- * @param config
- * @return zero on success, < 0 otherwise.
- */
 int trf797x_start(Trf797xDriver *drv, const Trf797xConfig *config);
-
-/**
- * Interrupt hook.
- * @param driver
- */
 void tf797x_interrupt_hookI(Trf797xDriver *driver);
-
-/**
- * Stop the driver.
- * @param driver
- */
+int trf797x_switch_rf(Trf797xDriver *driver, bool on);
 void trf797x_stop(Trf797xDriver *driver, bool shutdown);
 
 
