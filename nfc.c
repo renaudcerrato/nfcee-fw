@@ -45,7 +45,7 @@ static void raw_demo() {
     bool led = TRUE;
 
     struct trf797x_iovec tx = {
-            .base = "\x52",    // WUPA
+            .base = "\x26",    // REQA
             .bits = 7,
     };
 
@@ -53,6 +53,8 @@ static void raw_demo() {
             .base = rxbuf,
             .bytes = sizeof(rxbuf),
     };
+
+    trf797x_initiator_driver_init(&device.driver);
 
     while (true) {
 
@@ -65,7 +67,7 @@ static void raw_demo() {
 
             // Power-up target(s)
             trf797x_switch_rf((Trf797xDriver *) &device.driver, TRUE);
-            chThdSleepMilliseconds(5);
+            chThdSleepMilliseconds(10);
 
             int len = trf797x_initiator_transceive(&device.driver, &tx, 1, &rx, MS2ST(200));
             if(len > 0) {
