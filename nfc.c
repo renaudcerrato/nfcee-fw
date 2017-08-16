@@ -38,51 +38,10 @@ void trf797x_extcallback(EXTDriver *extp, expchannel_t channel) {
 
 static THD_WORKING_AREA(waNfcThread, 512);
 
-static void raw_demo() {
+static THD_FUNCTION(NfcThread, arg) {
 
-    uint8_t rxbuf[16];
-
-    bool led = TRUE;
-
-    struct trf797x_iovec tx = {
-            .base = "\x26",    // REQA
-            .bits = 7,
-    };
-
-    struct trf797x_iovec rx = {
-            .base = rxbuf,
-            .bytes = sizeof(rxbuf),
-    };
-
-    trf797x_initiator_driver_init(&device.driver);
-
-    while (true) {
-
-        if(led)
-            gpioSetPad(GPIO_LED1);
-        else
-            gpioClearPad(GPIO_LED1);
-
-        if(trf797x_initiator_start(&device.driver, &device.config) == 0) {
-
-            // Give some time to power-up target(s)
-            chThdSleepMilliseconds(5);
-
-            int len = trf797x_initiator_transceive(&device.driver, &tx, 1, &rx, MS2ST(200));
-            if(len > 0) {
-                trace("ATQA = %02X%02X", rxbuf[0], rxbuf[1]);
-            }else
-                chThdSleepMilliseconds(800);
-
-            trf797x_initiator_stop(&device.driver, TRUE);
-        }
-
-        chThdSleepMilliseconds(100);
-        led = !led;
-    }
-}
-
-static void libnfc_demo() {
+    chRegSetThreadName("nfc");
+    extChannelEnable(&TRF797X_EXT_DRIVER, TRF797X_EXT_CHANNEL);
 
     nfc_iso14443a_driver_t driver;
     bool led = TRUE;
@@ -114,19 +73,8 @@ static void libnfc_demo() {
 
         led = !led;
     }
-}
-
-static THD_FUNCTION(NfcThread, arg) {
-
-    chRegSetThreadName("nfc");
-    extChannelEnable(&TRF797X_EXT_DRIVER, TRF797X_EXT_CHANNEL);
-
-    if((int) arg)
-        libnfc_demo();
-    else
-        raw_demo();
 };
 
 void nfcStart() {
-    chThdCreateStatic(waNfcThread, sizeof(waNfcThread), HIGHPRIO, NfcThread, (void *) FALSE);
+    chThdCreateStatic(waNfcThread, sizeof(waNfcThread), HIGHPRIO, NfcThread, NULL);
 }
