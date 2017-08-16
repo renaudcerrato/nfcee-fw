@@ -4,12 +4,12 @@
 /**
  * @brief TRF797X SPI clock
  */
-#define TRF797X_CONF_SPI_CLOCK         1000000L
+#define TRF797X_CONF_SPI_CLOCK         1000000UL
 
 /**
  * @brief TR797X Oscillator: 27Mhz/13.56Mhz
  */
-#define TRF797X_CONF_27MHZ_OSC          1
+#define TRF797X_CONF_27MHZ_OSC          0
 
 /**
  * @brief SYS_CLK pin output divider
