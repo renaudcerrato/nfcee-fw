@@ -49,8 +49,9 @@ int nfc_iso14443a_transceive(nfc_iso14443a_driver_t *driver, const void *tx, siz
 }
 
 int nfc_iso14443a_open(nfc_iso14443a_driver_t *driver) {
-    uint8_t buf[8], size, sak;
-    int ret = 0;
+
+    int ret = 0, uid_size;
+    uint8_t buf[8];
 
     // Send WUPA, read ATQA
     if(transceive_short(driver->dev, 0x52, buf, sizeof(buf), DEFAULT_TIMEOUT) < 0) {
@@ -58,86 +59,67 @@ int nfc_iso14443a_open(nfc_iso14443a_driver_t *driver) {
         goto err;
     }
 
-    // Save ATQA
+    // ATQA
     driver->atqa = buf[0] | (buf[1] << 8);
 
-    // Not 14443-3 compliant
-    if(!(buf[0] & 0x1F)) {
+    // Not 14443-3 compliant?
+    if(!(driver->atqa & 0x1F)) {
         ret = -EPROTO;
         goto err;
     }
 
     // UID size
-    size = buf[0] >> 6;
-
-    // sanity check
-    if(size > 2) {
+    if((uid_size = ((buf[0] >> 6) & 0x03) + 1) > 3) {
         ret = -EIO;
         goto err;
     }
 
-    /**** TODO: optimize that ugly loop! */
-    // Retrieve UID CL1
-    buf[0] = 0x93; buf[1] = 0x20;
-    if(transceive(driver->dev, buf, 2, buf + 2, 5, DEFAULT_TIMEOUT) < 0) {
-        ret = -EIO;
-        goto err;
-    }
+    driver->nfcid.len =  0;
 
-    /* Check BCC */
-    if(!is_bcc_valid(buf + 2, buf[2 + 4])) {
-        ret = -EIO;
-        goto err;
-    }
+    for(int level = 0; level < uid_size; level++) {
 
-    memcpy(driver->nfcid.data, buf + 2, 4);
-    driver->nfcid.len =  4;
+        uint8_t sak[3];
 
-    /* Handle cascade level */
-    while(size--)
-    {
-        // Close cascade level n
-        buf[1] = 0x70;
+        // Retrieve UID CLn
+        buf[0] = 0x93 + 2*level; buf[1] = 0x20;
 
-        if(nfc_iso14443a_transceive(driver, buf, 7, &sak, 1, DEFAULT_TIMEOUT) < 0) {
+        if(transceive(driver->dev, buf, level == 0 ? 2 : 7, buf + 2, 5, DEFAULT_TIMEOUT) < 0) {
+            //TODO: handle collisions
             ret = -EIO;
             goto err;
         }
 
-        // Cascade level n+1, retrieve UID CLn
-        buf[0]+=2; buf[1] = 0x20;
-
-        if(transceive(driver->dev, buf, 2, buf + 2, 5, DEFAULT_TIMEOUT) < 0) {
-            ret = -EIO;
-            goto err;
-        }
-        
         // Check BCC
         if(!is_bcc_valid(buf + 2, buf[2 + 4])) {
             ret = -EIO;
             goto err;
         }
 
-        memmove(driver->nfcid.data + (driver->nfcid.len - 4), driver->nfcid.data + (driver->nfcid.len - 4) + 1, 3);
-        memcpy(driver->nfcid.data + driver->nfcid.len - 1, buf + 2, 4);
-        driver->nfcid.len += 3;
+        // Close cascade level n
+        buf[1] = 0x70;
+
+        if(nfc_iso14443a_transceive(driver, buf, 7, sak, 3, DEFAULT_TIMEOUT) < 0) {
+            ret = -EIO;
+            goto err;
+        }
+
+        // Check CRC ?
+        if((sak[0] & 0b100) == 0) {
+
+            if (crca(sak, 1) != (sak[1] + (sak[2] << 8))) {
+                ret = -EIO;
+                goto err;
+            }
+
+            driver->sak = sak[0];
+
+            memcpy(driver->nfcid.data + driver->nfcid.len, buf + 2, 4);
+            driver->nfcid.len += 4;
+        }else{
+            memcpy(driver->nfcid.data + driver->nfcid.len, buf + 3, 3);
+            driver->nfcid.len += 3;
+        }
     }
-
-    // Close cascade level n
-    buf[1] = 0x70;
-
-    if(nfc_iso14443a_transceive(driver, buf, 7, buf, 3, DEFAULT_TIMEOUT) < 0) {
-        ret = -EIO;
-        goto err;
-    }
-
-    // Check CRC
-    if(crca(buf, 1) != (buf[1] + (buf[2] << 8))) {
-        ret = -EIO;
-        goto err;
-    }
-
-    driver->sak = buf[0];
 
     // T=CL compliant?
     if((driver->sak & 0x24) == 0x20) {
