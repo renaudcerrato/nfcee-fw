@@ -34,7 +34,7 @@ SET(SOURCE_FILES
         libs/nfc/iso14443.c
         libs/nfc/iso14443a.c
 
-)
+        libs/newlib/usleep.c)
 
 ADD_DEFINITIONS(-DCORTEX_USE_FPU=TRUE)
 ADD_DEFINITIONS(-DUSB_CDC_TRACE)

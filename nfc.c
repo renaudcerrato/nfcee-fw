@@ -127,5 +127,5 @@ static THD_FUNCTION(NfcThread, arg) {
 };
 
 void nfcStart() {
-    chThdCreateStatic(waNfcThread, sizeof(waNfcThread), HIGHPRIO, NfcThread, (void *) TRUE);
+    chThdCreateStatic(waNfcThread, sizeof(waNfcThread), HIGHPRIO, NfcThread, (void *) FALSE);
 }
