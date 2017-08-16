@@ -64,6 +64,7 @@ int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf79
     chEvtGetAndClearFlags(&drv->listener);
 
     // Fill FIFO & transmit
+    // FIXME: BUG! Must pass the sum of tx[]->bits !
     int len = trf797x_transmit(drv->config->spi, tx->base, tx->bits, FALSE);
 
     const void *tx_buf = tx->base;
