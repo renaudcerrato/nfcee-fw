@@ -87,14 +87,6 @@ void tf797x_interrupt_hookI(Trf797xDriver *drv) {
     chEvtBroadcastFlagsI(&drv->event, EVENT_IRQ);
 }
 
-int trf797x_switch_rf(Trf797xDriver *driver, bool on) {
-    //TODO: check RF level
-    trf797x_register_write1(driver->config->spi, TRF797X_REG_CHIP_STATUS,
-                                    ((on) ? TRF797X_CHIP_STATUS_RF_ON : 0) |
-                                    ((TRF797X_CONF_VIN_5V) ? TRF797X_CHIP_STATUS_VRS5_3 : 0));
-    return 0;
-}
-
 void trf797x_stop(Trf797xDriver *drv, bool shutdown) {
 
     if(shutdown) {

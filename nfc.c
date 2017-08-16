@@ -65,9 +65,8 @@ static void raw_demo() {
 
         if(trf797x_initiator_start(&device.driver, &device.config) == 0) {
 
-            // Power-up target(s)
-            trf797x_switch_rf((Trf797xDriver *) &device.driver, TRUE);
-            chThdSleepMilliseconds(10);
+            // Give some time to power-up target(s)
+            chThdSleepMilliseconds(5);
 
             int len = trf797x_initiator_transceive(&device.driver, &tx, 1, &rx, MS2ST(200));
             if(len > 0) {

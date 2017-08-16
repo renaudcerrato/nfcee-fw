@@ -23,6 +23,15 @@ static int irq2error(uint8_t irq) {
     return 0;
 }
 
+
+static int switch_rf(const Trf797xInitiatorConfig *config, bool on) {
+    //TODO: check RF level
+    trf797x_register_write1(config->spi, TRF797X_REG_CHIP_STATUS,
+                            ((on) ? TRF797X_CHIP_STATUS_RF_ON : 0) |
+                            ((TRF797X_CONF_VIN_5V) ? TRF797X_CHIP_STATUS_VRS5_3 : 0));
+    return 0;
+}
+
 void trf797x_initiator_driver_init(Trf797xInitiatorDriver *driver) {
     trf797x_driver_init((Trf797xDriver *) driver);
 }
@@ -45,7 +54,7 @@ int trf797x_initiator_start(Trf797xInitiatorDriver *drv, const Trf797xInitiatorC
     trf797x_register_write1(config->spi, TRF797X_REG_FIFO_IRQ_LEVELS,
                             TRF797X_FIFO_IRQ_LEVELS_WLH_96 | TRF797X_FIFO_IRQ_LEVELS_WLL_32);
 
-    return 0;
+    return switch_rf(config, TRUE);
 }
 
 int trf797x_initiator_transceive(Trf797xInitiatorDriver *drv, const struct trf797x_iovec *tx, size_t txlen, const struct trf797x_iovec *rx, systime_t timeout) {
@@ -143,7 +152,7 @@ int trf797x_initiator_stop(Trf797xInitiatorDriver *drv, bool shutdown) {
 
     if(!shutdown) {
         ACQUIRE_FOR_SCOPE(drv->config->spi);
-        trf797x_switch_rf((Trf797xDriver *) drv, FALSE);
+        switch_rf(drv->config, FALSE);
         drv->state = TRF797X_ST_RF_OFF;
     }
 

@@ -43,8 +43,6 @@ static int nfc_device_ioctl(struct trf797x_nfc_device *dev, nfc_iocreq_t req, vo
         case NFC_IOCR_DEV_FRAME_SIZE:
             *((size_t *) arg) = TRF797X_FIFO_SIZE;
             break;
-        case NFC_IOCW_SWITCH_RF:
-            return trf797x_switch_rf((Trf797xDriver *) &dev->driver, ((int) arg) ? TRUE : FALSE);
         default:
             return -EINVAL;
     }
