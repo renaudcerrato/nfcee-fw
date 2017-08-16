@@ -89,23 +89,44 @@ void trf797x_register_write(SPIDriver *spi, trf797x_reg_t adr, const void *data,
     }
 }
 
-int trf797x_transmit(SPIDriver *spi, const void *data, size_t bits, bool crc) {
+size_t trf797x_transmit(SPIDriver *spi, const struct trf797x_iovec **tx, size_t *len, bool crc) {
 
-    const int bytes = MIN((bits + 7) / 8, TRF797X_FIFO_SIZE);
+    size_t fifo = 0, sent;
+    int bits = 0;
+
+    for(size_t i = 0; i < *len; i++) {
+        bits+=(*tx)[i].bits;
+    }
 
     const uint8_t header[] = {
             COMMAND(TRF797X_CMD_RESET_FIFO),
             COMMAND(crc ? TRF797X_CMD_TX : TRF797X_CMD_TX_NO_CRC),
-            REGISTER_WRITE(TRF797X_REG_TX_LENGTH1, 2 + bytes),
+            REGISTER_WRITE(TRF797X_REG_TX_LENGTH1, 2 + MIN(TRF797X_FIFO_SIZE, (bits + 7) / 8)),
             (uint8_t) (bits >> 7),
             (uint8_t) (((bits & 0xFF) << 1) | ((bits % 8) != 0))
     };
 
     spiSend(spi, sizeof(header), header);
-    spiSend(spi, bytes, data);
+
+    while(bits > 0 && fifo < TRF797X_FIFO_SIZE) {
+        const size_t bytes = ((*tx)->bits + 7) / 8;
+        sent = MIN(bytes, TRF797X_FIFO_SIZE - fifo);
+
+        spiSend(spi, sent, (*tx)->base);
+
+        bits-=(*tx)->bits;
+        fifo+=sent;
+
+        if(sent == bytes) {
+            if(--(*len)) {
+                (*tx)++;
+            }
+        }
+    }
+
     TOGGLE_CHIP_SELECT(spi);
 
-    return bytes;
+    return sent;
 }
 
 int trf797x_fifo_fill(SPIDriver *spi, const void *data, size_t len) {

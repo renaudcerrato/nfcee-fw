@@ -135,7 +135,7 @@ void trf797x_command(SPIDriver *spi, trf797x_cmd_t cmd);
 size_t trf797x_register_read(SPIDriver *spi, trf797x_reg_t adr, void *data, size_t len);
 void trf797x_register_write(SPIDriver *spi, trf797x_reg_t adr, const void *data, size_t len);
 
-int trf797x_transmit(SPIDriver *spi, const void *data, size_t bits, bool crc);
+size_t trf797x_transmit(SPIDriver *spi, const struct trf797x_iovec **tx, size_t *len, bool crc);
 int trf797x_fifo_fill(SPIDriver *spi, const void *data, size_t len);
 int trf797x_fifo_drain(SPIDriver *spi, void *data, size_t len);
 
