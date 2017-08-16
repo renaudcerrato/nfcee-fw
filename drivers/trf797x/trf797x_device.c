@@ -26,10 +26,15 @@ static int nfc_device_open(struct trf797x_nfc_device *dev, nfc_digital_t tech) {
 }
 
 static int nfc_device_transceive(struct trf797x_nfc_device *dev, const struct nfc_iovec *tx, size_t len, struct nfc_iovec *rx, unsigned int timeout) {
-    struct trf797x_iovec _tx = { tx->base, .bits = tx->bits };
+    struct trf797x_iovec _tx[len];
     struct trf797x_iovec _rx = { rx->base, .bits = rx->bits };
 
-    return trf797x_initiator_transceive(&dev->driver, &_tx, len, &_rx, MS2ST(timeout));
+    for(int i = 0; i < len; i++) {
+        _tx[i].base = tx[i].base;
+        _tx[i].bits = tx[i].bits;
+    }
+
+    return trf797x_initiator_transceive(&dev->driver, _tx, len, &_rx, MS2ST(timeout));
 }
 
 static int nfc_device_ioctl(struct trf797x_nfc_device *dev, nfc_iocreq_t req, void *arg) {
