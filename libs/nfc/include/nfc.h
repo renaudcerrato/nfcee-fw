@@ -33,7 +33,6 @@ struct nfc_iovec {
 };
 
 typedef enum {
-    NFC_IOCW_SWITCH_RF = 0,
     NFC_IOCR_DEV_FRAME_SIZE,
 } nfc_iocreq_t;
 
@@ -54,7 +53,6 @@ typedef struct {
 
 int nfc_open(nfc_driver_t *driver);
 int nfc_transceive(nfc_driver_t *driver, const void *tx, size_t txlen, void *rx, size_t rxlen, unsigned int timeout);
-int nfc_ioctl(nfc_driver_t *driver, nfc_iocreq_t req, void *arg);
 int nfc_close(nfc_driver_t *driver);
 
 #include "iso14443.h"

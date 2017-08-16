@@ -56,7 +56,6 @@ nfc_driver_t * nfc_iso14443a_driver_init(nfc_iso14443a_driver_t *driver, struct 
 
 int nfc_iso14443_open(nfc_iso14443_driver_t *driver);
 int nfc_iso14443_transceive(nfc_iso14443_driver_t *driver, const void *tx, size_t txlen, void *rx, size_t rxlen, unsigned int timeout);
-int nfc_iso14443_ioctl(nfc_iso14443_driver_t *driver, nfc_iocreq_t req, void *arg);
 int nfc_iso14443_close(nfc_iso14443_driver_t *driver);
 
 size_t fsci2fsc(uint8_t fsci);

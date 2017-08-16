@@ -80,11 +80,6 @@ int nfc_iso14443_open(nfc_iso14443_driver_t *driver) {
             return ret;
         }
 
-        // Turn RF on
-        if((ret = driver->dev->ioctl(driver->dev, NFC_IOCW_SWITCH_RF, (void *) 1)) != 0) {
-            goto error;
-        }
-
         driver->dev->ioctl(driver->dev, NFC_IOCR_DEV_FRAME_SIZE, &driver->fsd);
 
         usleep(6000L);
@@ -229,17 +224,6 @@ int nfc_iso14443_transceive(nfc_iso14443_driver_t *driver, const void *txdata, s
     return received;
 error:
     return -EIO;
-}
-
-int nfc_iso14443_ioctl(nfc_iso14443_driver_t *driver, nfc_iocreq_t req, void *arg) {
-
-    int ret = driver->dev->ioctl(driver->dev, req, arg);
-
-    if(req == NFC_IOCW_SWITCH_RF && !(int) arg) {
-        driver->state = ISO14443_STATE_POWER_OFF;
-    }
-
-    return ret;
 }
 
 /**
